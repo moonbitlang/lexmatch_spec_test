@@ -24,13 +24,26 @@ pub fn wordcount(
   words : Int,
   chars : Int,
 ) -> (Int, Int, Int) {
-  lexmatch input with longest {
-    ("\n", rest) => wordcount(rest, lines + 1, words, chars)
-    ("[^ \t\r\n]+" as word, rest) =>
-      wordcount(rest, lines, words + 1, chars + word.length())
-    (".", rest) => wordcount(rest, lines, words, chars + 1)
-    "" => (lines, words, chars)
-    _ => panic()
+  struct State {
+    lines : Int
+    words : Int
+    chars : Int
+    data : BytesView
+  }
+  for state = { lines, words, chars, data: input } {
+    lexmatch state.data with longest {
+      ("\n", rest) => continue { ..state, lines: state.lines + 1, data: rest }
+      ("[^ \t\r\n]+" as word, rest) =>
+        continue {
+            ..state,
+            words: state.words + 1,
+            chars: state.chars + word.length(),
+            data: rest,
+          }
+      (".", rest) => continue { ..state, chars: state.chars + 1, data: rest }
+      "" => break (state.lines, state.words, state.chars)
+      _ => panic()
+    }
   }
 }
 ```
@@ -56,10 +69,50 @@ pub fn downloadable_protocol(url : StringView) -> StringView? {
 ```
 
 ```mbt test
-inspect(downloadable_protocol("https://example.com"), content="Some(\"https\")")
+@json.inspect(downloadable_protocol("https://example.com"), content=["https"])
+@json.inspect(downloadable_protocol("FTP://example.com"), content=["FTP"])
 ```
 
 This example demonstrates how to use the `lexmatch?` expression to check whether a `url` starts with a downloadable protocol (ftp, http, https) and capture that protocol. This also demonstrates the use of the case-insensitive modifier `(?i:...)`.
+
+#### Search Logs
+
+This example shows how to use `lexmatch` to parse structured log data and extract error entries with their timestamps and messages. The pattern uses a wildcard prefix `_` to skip over non-matching content before finding `ERROR` lines.
+
+```mbt test
+let log =
+  #|INFO 2024-01-01 12:00:00 Starting service
+  #|ERROR 2024-01-01 12:05:00 Failed to start service
+  #|WARN 2024-01-01 12:10:00 Low memory
+  #|INFO 2024-01-01 12:15:00 Service started successfully
+  #|ERROR 2024-01-01 12:20:00 Service crashed unexpectedly
+  #|ERROR 2024-01-01 12:25:00 Failed to restart service
+let error_logs : Array[Json] = []
+for curr = log[:] {
+  lexmatch curr {
+    (
+      _,
+      "ERROR[ ]*"
+      ("\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}" as timestamp)
+      "[ ]*"
+      ("[^\n]*" as message)
+      "\n",
+      next
+    ) => {
+      error_logs.push({ "timestamp": timestamp, "message": message })
+      continue next
+    }
+    _ => break
+  }
+}
+@json.inspect(error_logs, content=[
+  { "timestamp": "2024-01-01 12:05:00", "message": "Failed to start service" },
+  {
+    "timestamp": "2024-01-01 12:20:00",
+    "message": "Service crashed unexpectedly",
+  },
+])
+```
 
 ### Core Concepts
 
@@ -67,15 +120,144 @@ This example demonstrates how to use the `lexmatch?` expression to check whether
 
 - **Target**: The `StringView` or `BytesView` being matched by `lexmatch`.
 
-- **Match Strategy**: The strategy used to match patterns, which can be `longest` (longest match) or `first` (first match, default, currently unavailable). This proposal focuses on the `longest` match strategy.
+- **Match Strategy**: The strategy used to match patterns.
+  - **Default** (without `with` clause): Uses first match semantics — branches are tried in order and the first matching branch is taken. This is the most common form for general string processing.
+  - `with longest`: Uses longest match semantics — all branches are evaluated and the branch whose regex matches the **longest prefix** is selected. If multiple branches match the same length, the first one wins. This is primarily used for building **programming language lexers** where maximal munch is desired.
+  
 
 - **Catch-all case**: A branch whose left side is a variable or wildcard `_`, which can match any target. It must be placed at the end of the `lexmatch` branches to handle unmatched cases.
 
 - **Lex Pattern**: The pattern part on the left side of the `lexmatch` branch (before `=>`), which differs from the guard part (currently `lexmatch` does not support guards).
 
   A lex pattern can be one of the following forms:
-  - **Bare regex pattern**: A regex pattern that matches the entire target. Example: `""`
-  - **Regex pattern + rest variable**: A regex pattern that matches a prefix of the target, with the rest variable bound to the remaining suffix. The rest variable can be a variable or wildcard `_`. This form requires parentheses for readability. Example: `("\n", rest)`
+
+  | Form | Syntax | Anchoring | Availability |
+  |------|--------|-----------|---------------|
+  | **Bare regex** | `regex` | Left + Right | All strategies |
+  | **Two-part** | `(regex, rest)` | Left only | All strategies |
+  | **Three-part** | `(prefix, regex, rest)` | None | Default only (not with `longest`) |
+
+  - **Bare regex**: Matches the entire target (both start and end anchored)
+  - **Two-part**: Matches a prefix of the target; `rest` binds to the remaining suffix
+  - **Three-part**: `prefix` skips content before `regex`; `rest` binds to the suffix after `regex`. **Note:** This form is only available without `with longest`.
+
+  The rest variable can be a variable name or wildcard `_`.
+
+  **Examples:**
+  - `""` — matches empty string (entire target must be empty)
+  - `"\d+"` — matches if entire target consists of digits
+  - `("\d+", rest)` — matches digits at the start; `rest` gets the remainder
+  - `(_, "ERROR" ("\d+" as code), rest)` — finds "ERROR" followed by digits anywhere in the target; captures the digits as `code`
+
+#### Lex Pattern Forms - Examples
+
+The following examples demonstrate the three lex pattern forms and their anchoring behavior.
+
+**Bare regex (left + right anchored)** — must match the entire target:
+
+```mbt test
+// Bare regex matches entire target
+let result = if "12345" lexmatch? "\d+" {
+  "all digits"
+} else {
+  "not all digits"
+}
+inspect(result, content="all digits")
+
+// Fails if there's extra content
+let result2 = if "123abc" lexmatch? "\d+" {
+  "all digits"
+} else {
+  "not all digits"
+}
+inspect(result2, content="not all digits")
+
+// Empty string pattern matches empty target
+let result3 = if "" lexmatch? "" { "empty" } else { "not empty" }
+inspect(result3, content="empty")
+```
+
+**Two-part (left anchored only)** — matches prefix, rest captures remainder:
+
+```mbt test
+// Two-part: matches prefix, captures rest
+lexmatch "123abc" with longest {
+  ("\d+" as digits, rest) => {
+    inspect(digits, content="123")
+    inspect(rest, content="abc")
+  }
+  _ => fail("should match")
+}
+
+// Two-part must start from beginning
+let matched = "abc123" lexmatch? ("\d+", _) with longest
+inspect(matched, content="false") // digits not at start
+```
+
+**Three-part (no anchoring)** — prefix skips content, regex matches anywhere.
+
+**Note:** Three-part form is only available without `with longest`:
+
+```mbt test
+// Three-part: skip prefix, find pattern anywhere (no 'with longest')
+lexmatch "hello ERROR123 world" {
+  (_, "ERROR" ("\d+" as code), rest) => {
+    inspect(code, content="123")
+    inspect(rest, content=" world")
+  }
+  _ => fail("should match")
+}
+
+// Three-part can find pattern in middle of string
+lexmatch "prefix>>>MARKER<<<suffix" {
+  (_, "MARKER", rest) => inspect(rest, content="<<<suffix")
+  _ => fail("should match")
+}
+```
+
+#### Match Strategy Examples
+
+**Default (without `with` clause)** — the standard form for general string processing:
+
+```mbt test
+// Default strategy: first match, patterns tried in order
+lexmatch "hello world" {
+  ("hello", rest) => inspect(rest, content=" world")
+  _ => fail("should match")
+}
+
+// Three-part form is available in default mode
+lexmatch "abc123def" {
+  (_, "\d+" as digits, rest) => {
+    inspect(digits, content="123")
+    inspect(rest, content="def")
+  }
+  _ => fail("should match")
+}
+```
+
+**`with longest`** — specialized for programming language lexers:
+
+```mbt test
+// With longest: all branches are checked, longest match wins
+// Here "[a-z]+" matches "ifx" (3 chars) vs "if" matches only 2 chars
+// So the second branch is selected because it matches longer
+lexmatch "ifx" with longest {
+  ("if", _) => fail("should not match - 'if' is only 2 chars")
+  ("[a-z]+" as id, rest) => {
+    inspect(id, content="ifx") // matched all 3 chars
+    inspect(rest, content="")
+  }
+  _ => fail("should match")
+}
+
+// Compare with default (first match): "if" branch would win
+lexmatch "ifx" {
+  ("if", rest) => inspect(rest, content="x") // first match wins
+  ("[a-z]+", _) => fail("should not reach - first branch matched")
+  _ => fail("should match")
+}
+```
 
 - **Regex Pattern**: Regex patterns have three forms:
   - **Regex literal**: A string literal representing a regex pattern. Example: `"[^ \t\r\n]+"`. Note that regex literals must be enclosed in double quotes and do not require double escaping. For example, to match a backslash character, use `"\\"` instead of `"\\\\"`.
@@ -128,11 +310,13 @@ The `lexmatch` expression works similarly to the `match` expression, but with th
 
 1. The target of a `lexmatch` expression must be `StringView` or `BytesView`.
 2. Except for the catch-all branch, the left side of each `lexmatch` branch must be a lex pattern.
-3. A match strategy can be specified after the `with` keyword. If not specified, the default strategy is `first` (currently unavailable).
-4. Regex patterns in lex patterns match the target using the specified match strategy.
-5. If a regex pattern matches the target, any capture variables in the pattern will be bound to the corresponding matched substrings.
-6. If a regex pattern followed by a comma and rest variable matches the target, the regex pattern will match a prefix of the target, and the rest variable will be bound to the remaining suffix.
-7. If no lex pattern matches the target, the catch-all branch will be executed.
+3. A match strategy can optionally be specified after the `with` keyword. Without it, the default first-match strategy is used. Use `with longest` for lexer-style longest match semantics.
+4. **Anchoring behavior**:
+   - **Bare regex** `regex`: Must match the entire target (implicitly anchored at both start and end).
+   - **Two-part** `(regex, rest)`: The regex must match starting from the beginning of the target (left-anchored); `rest` captures whatever remains.
+   - **Three-part** `(prefix, regex, rest)`: The `prefix` consumes content before `regex`; `regex` can match anywhere after the prefix; `rest` captures what follows. **Note:** This form is only available without `with longest`.
+5. If a regex pattern matches, any capture variables (`as name`) in the pattern will be bound to the corresponding matched substrings.
+6. If no lex pattern matches the target, the catch-all branch will be executed.
 
 #### Special Notes
 
