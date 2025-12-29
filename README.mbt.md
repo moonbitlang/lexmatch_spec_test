@@ -310,39 +310,39 @@ test {
   - `\xhh`: Matches a character with hexadecimal value `hh` (`hh` is two hexadecimal digits)
   - `\uhhhh`: Matches a character with Unicode code point `hhhh` (`hhhh` is four hexadecimal digits). Note that this escape sequence is invalid when the target is `BytesView`.
   - `\u{h...}`: Matches a character with Unicode code point `h...` (`h...` is one or more hexadecimal digits). Note that this escape sequence is invalid when the target is `BytesView`.
-  - **Character Classes (deprecated escapes and POSIX alternatives)**:
-    - Note: The common escape sequences `\s`, `\S`, `\d`, `\D`, `\w`, and `\W` are deprecated in `lexmatch` regexes. Use the POSIX-style classes below instead. All POSIX classes here operate on the ASCII range only.
-    - Supported POSIX character classes (only recognized inside a bracket expression `[...]`):
-      - `[:ascii:]` — ASCII characters U+0000..U+007F. Example: `[[:ascii:]]` matches any ASCII codepoint.
-      - `[:lower:]` — ASCII lowercase letters `a`–`z`. Example: `[[:lower:]]` matches `a`, `b`, ..., `z`.
-      - `[:upper:]` — ASCII uppercase letters `A`–`Z`. Example: `[[:upper:]]` matches `A`, `B`, ..., `Z`.
-      - `[:alpha:]` — ASCII letters, equivalent to `[[:lower:][:upper:]]`.
-      - `[:digit:]` — ASCII digits `0`–`9`. Example: `[[:digit:]]` matches `0`..`9`.
-      - `[:xdigit:]` — ASCII hexadecimal digits `0`–`9`, `A`–`F`, `a`–`f` (equivalent to `[0-9A-Fa-f]`).
-      - `[:alnum:]` — ASCII alphanumeric characters, equivalent to `[[:alpha:][:digit:]]`.
-      - `[:blank:]` — ASCII horizontal whitespace: space and tab (equivalent to `[ \t]`).
-      - `[:space:]` — ASCII whitespace characters (space, tab, newline, carriage return, form feed, vertical tab) — use for matching general ASCII whitespace.
-      - `[:word:]` — ASCII word characters, equivalent to `[A-Za-z0-9_]`.
-    - Important usage rule: POSIX classes are only recognized when placed inside a character class. Use `[[:digit:]]`, not `[:digit:]` alone; the latter is not a valid character class.
-    - Common mappings (for porting existing patterns):
-      - `\d`  → `[[:digit:]]`
-      - `\D`  → `[^[:digit:]]`
-      - `\s`  → `[[:space:]]`
-      - `\S`  → `[^[:space:]]`
-      - `\w`  → `[[:word:]]`
-      - `\W`  → `[^[:word:]]`
-    - Examples and tips:
-      - Match a single hex digit: `[[:xdigit:]]` (equivalent to `[0-9A-Fa-f]`).
-      - Match one or more ASCII letters: `[[:alpha:]]+`.
-      - Combine classes: `[[:alpha:][:digit:]]` matches any ASCII letter or digit (same as `[[:alnum:]]`).
-      - Negation: `[^[:space:]]` matches any character that is not ASCII whitespace.
-    - Rationale: restricting these classes to ASCII keeps `lexmatch` behavior predictable for `BytesView` targets and avoids locale/Unicode category complexity.
-  - **Character Sets**:
-    - `[abc]`: Matches character `a`, `b`, or `c`
-    - `[a-z]`: Matches any character from `a` to `z`
-    - `[^abc]`: Matches any character except `a`, `b`, and `c`
-    - `[^a-z]`: Matches any character not in the range `a` to `z`
-    - `[[:digit:][:space:]]`: Matches any digit or whitespace character (use POSIX classes inside the brackets)
+- **Character Classes (deprecated escapes and POSIX alternatives)**:
+  - Note: The common escape sequences `\s`, `\S`, `\d`, `\D`, `\w`, and `\W` are deprecated in `lexmatch` regexes. Use the POSIX-style classes below instead. All POSIX classes here operate on the ASCII range only.
+  - Supported POSIX character classes (only recognized inside a bracket expression `[...]`):
+    - `[:ascii:]` — ASCII characters U+0000..U+007F. Example: `[[:ascii:]]` matches any ASCII codepoint.
+    - `[:lower:]` — ASCII lowercase letters `a`–`z`. Example: `[[:lower:]]` matches `a`, `b`, ..., `z`.
+    - `[:upper:]` — ASCII uppercase letters `A`–`Z`. Example: `[[:upper:]]` matches `A`, `B`, ..., `Z`.
+    - `[:alpha:]` — ASCII letters, equivalent to `[[:lower:][:upper:]]`.
+    - `[:digit:]` — ASCII digits `0`–`9`. Example: `[[:digit:]]` matches `0`..`9`.
+    - `[:xdigit:]` — ASCII hexadecimal digits `0`–`9`, `A`–`F`, `a`–`f` (equivalent to `[0-9A-Fa-f]`).
+    - `[:alnum:]` — ASCII alphanumeric characters, equivalent to `[[:alpha:][:digit:]]`.
+    - `[:blank:]` — ASCII horizontal whitespace: space and tab (equivalent to `[ \t]`).
+    - `[:space:]` — ASCII whitespace characters (space, tab, newline, carriage return, form feed, vertical tab) — use for matching general ASCII whitespace.
+    - `[:word:]` — ASCII word characters, equivalent to `[A-Za-z0-9_]`.
+  - Important usage rule: POSIX classes are only recognized when placed inside a character class. Use `[[:digit:]]`, not `[:digit:]` alone; the latter is not a valid character class.
+  - Common mappings (for porting existing patterns):
+    - `\d`  → `[[:digit:]]`
+    - `\D`  → `[^[:digit:]]`
+    - `\s`  → `[[:space:]]`
+    - `\S`  → `[^[:space:]]`
+    - `\w`  → `[[:word:]]`
+    - `\W`  → `[^[:word:]]`
+  - Examples and tips:
+    - Match a single hex digit: `[[:xdigit:]]` (equivalent to `[0-9A-Fa-f]`).
+    - Match one or more ASCII letters: `[[:alpha:]]+`.
+    - Combine classes: `[[:alpha:][:digit:]]` matches any ASCII letter or digit (same as `[[:alnum:]]`).
+    - Negation: `[^[:space:]]` matches any character that is not ASCII whitespace.
+  - Rationale: restricting these classes to ASCII keeps `lexmatch` behavior predictable for `BytesView` targets and avoids locale/Unicode category complexity.
+- **Character Sets**:
+  - `[abc]`: Matches character `a`, `b`, or `c`
+  - `[a-z]`: Matches any character from `a` to `z`
+  - `[^abc]`: Matches any character except `a`, `b`, and `c`
+  - `[^a-z]`: Matches any character not in the range `a` to `z`
+  - `[[:digit:][:space:]]`: Matches any digit or whitespace character (use POSIX classes inside the brackets)
 - **Quantifiers**:
   - `*`: Matches the preceding sub-expression zero or more times (greedy)
   - `+`: Matches the preceding sub-expression one or more times (greedy)
