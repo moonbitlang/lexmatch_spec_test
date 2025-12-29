@@ -16,7 +16,7 @@ test "Simple string capture" {
 ///|
 test "Digit capture" {
   lexmatch "5" {
-    ("\d" as digit) =>
+    ("[[:digit:]]" as digit) =>
       if digit == '5' {
         ()
       } else {
@@ -29,7 +29,7 @@ test "Digit capture" {
 ///|
 test "Multiple digit capture" {
   lexmatch "123" {
-    ("\d+" as number) =>
+    ("[[:digit:]]+" as number) =>
       if number.to_string() == "123" {
         ()
       } else {
@@ -55,7 +55,7 @@ test "Letter capture" {
 ///|
 test "Word capture with character class" {
   lexmatch "test" {
-    ("\w+" as word) =>
+    ("[[:word:]]+" as word) =>
       if word.to_string() == "test" {
         ()
       } else {
@@ -129,7 +129,7 @@ test "Capture with quantifier {n,m}" {
 ///|
 test "Capture email username" {
   lexmatch "user123@example.com" {
-    (("\w+" as user) "@" "\w+" "." "\w+") =>
+    (("[[:word:]]+" as user) "@" "[[:word:]]+" "." "[[:word:]]+") =>
       if user.to_string() == "user123" {
         ()
       } else {
@@ -142,7 +142,7 @@ test "Capture email username" {
 ///|
 test "Capture email domain" {
   lexmatch "test@domain.com" {
-    ("\w+" "@" ("\w+" as domain) "." "\w+") =>
+    ("[[:word:]]+" "@" ("[[:word:]]+" as domain) "." "[[:word:]]+") =>
       if domain.to_string() == "domain" {
         ()
       } else {
@@ -168,7 +168,7 @@ test "Capture with rest variable" {
 ///|
 test "Capture number with rest" {
   lexmatch "123abc" {
-    ("\d+" as num, rest) =>
+    ("[[:digit:]]+" as num, rest) =>
       if num.to_string() == "123" && rest.to_string() == "abc" {
         ()
       } else {
@@ -181,7 +181,7 @@ test "Capture number with rest" {
 ///|
 test "Capture identifier" {
   lexmatch "myVar123" {
-    ("[a-zA-Z_]\w*" as id) =>
+    ("[a-zA-Z_][[:word:]]*" as id) =>
       if id.to_string() == "myVar123" {
         ()
       } else {
@@ -207,7 +207,15 @@ test "Capture quoted string content" {
 ///|
 test "Capture IP address parts - first octet" {
   lexmatch "192.168.1.1" {
-    (("\d{1,3}" as first) "." "\d{1,3}" "." "\d{1,3}" "." "\d{1,3}") =>
+    (
+      ("[[:digit:]]{1,3}" as first)
+      "."
+      "[[:digit:]]{1,3}"
+      "."
+      "[[:digit:]]{1,3}"
+      "."
+      "[[:digit:]]{1,3}"
+    ) =>
       if first.to_string() == "192" {
         ()
       } else {
@@ -220,7 +228,7 @@ test "Capture IP address parts - first octet" {
 ///|
 test "Capture file extension" {
   lexmatch "file.txt" {
-    ("\w+" "." ("\w+" as ext)) =>
+    ("[[:word:]]+" "." ("[[:word:]]+" as ext)) =>
       if ext.to_string() == "txt" {
         ()
       } else {
@@ -246,7 +254,7 @@ test "Capture protocol from URL" {
 ///|
 test "Capture phone number area code" {
   lexmatch "(123)456-7890" {
-    ("\(" ("\d{3}" as area) "\)" "\d{3}" "-" "\d{4}") =>
+    ("\(" ("[[:digit:]]{3}" as area) "\)" "[[:digit:]]{3}" "-" "[[:digit:]]{4}") =>
       if area.to_string() == "123" {
         ()
       } else {
@@ -259,7 +267,7 @@ test "Capture phone number area code" {
 ///|
 test "Capture version major number" {
   lexmatch "1.2.3" {
-    (("\d+" as major) "." "\d+" "." "\d+") =>
+    (("[[:digit:]]+" as major) "." "[[:digit:]]+" "." "[[:digit:]]+") =>
       if major.to_string() == "1" {
         ()
       } else {
@@ -285,7 +293,7 @@ test "Capture hexadecimal color code" {
 ///|
 test "Capture date year" {
   lexmatch "2024-01-15" {
-    (("\d{4}" as year) "-" "\d{2}" "-" "\d{2}") =>
+    (("[[:digit:]]{4}" as year) "-" "[[:digit:]]{2}" "-" "[[:digit:]]{2}") =>
       if year.to_string() == "2024" {
         ()
       } else {
@@ -298,7 +306,7 @@ test "Capture date year" {
 ///|
 test "Capture date month" {
   lexmatch "2024-12-31" {
-    ("\d{4}" "-" ("\d{2}" as month) "-" "\d{2}") =>
+    ("[[:digit:]]{4}" "-" ("[[:digit:]]{2}" as month) "-" "[[:digit:]]{2}") =>
       if month.to_string() == "12" {
         ()
       } else {
@@ -311,7 +319,7 @@ test "Capture date month" {
 ///|
 test "Capture time hours" {
   lexmatch "14:30:45" {
-    (("\d{2}" as hours) ":" "\d{2}" ":" "\d{2}") =>
+    (("[[:digit:]]{2}" as hours) ":" "[[:digit:]]{2}" ":" "[[:digit:]]{2}") =>
       if hours.to_string() == "14" {
         ()
       } else {
@@ -324,7 +332,7 @@ test "Capture time hours" {
 ///|
 test "Capture variable name from assignment" {
   lexmatch "x = 5" {
-    (("[a-zA-Z_]\w*" as varname) "\s*" "=" ".*") =>
+    (("[a-zA-Z_][[:word:]]*" as varname) "[[:space:]]*" "=" ".*") =>
       if varname.to_string() == "x" {
         ()
       } else {
@@ -337,7 +345,7 @@ test "Capture variable name from assignment" {
 ///|
 test "Capture function name from call" {
   lexmatch "print()" {
-    (("[a-zA-Z_]\w*" as funcname) "\(" ".*" "\)") =>
+    (("[a-zA-Z_][[:word:]]*" as funcname) "\(" ".*" "\)") =>
       if funcname.to_string() == "print" {
         ()
       } else {
@@ -350,7 +358,7 @@ test "Capture function name from call" {
 ///|
 test "Capture comment text" {
   lexmatch "// this is a comment" {
-    ("//" "\s*" ("[^\n]*" as comment)) =>
+    ("//" "[[:space:]]*" ("[^\n]*" as comment)) =>
       if comment.to_string() == "this is a comment" {
         ()
       } else {
@@ -364,17 +372,17 @@ test "Capture comment text" {
 test "Capture MAC address part" {
   lexmatch "AA:BB:CC:DD:EE:FF" {
     (
-      ("[\dA-Fa-f]{2}" as part1)
+      ("[[:digit:]A-Fa-f]{2}" as part1)
       ":"
-      "[\dA-Fa-f]{2}"
+      "[[:digit:]A-Fa-f]{2}"
       ":"
-      "[\dA-Fa-f]{2}"
+      "[[:digit:]A-Fa-f]{2}"
       ":"
-      "[\dA-Fa-f]{2}"
+      "[[:digit:]A-Fa-f]{2}"
       ":"
-      "[\dA-Fa-f]{2}"
+      "[[:digit:]A-Fa-f]{2}"
       ":"
-      "[\dA-Fa-f]{2}"
+      "[[:digit:]A-Fa-f]{2}"
     ) =>
       if part1.to_string() == "AA" {
         ()
@@ -388,7 +396,13 @@ test "Capture MAC address part" {
 ///|
 test "Capture integer from expression" {
   lexmatch "x + 42" {
-    ("\w+" "\s*" "[+\-*/]" "\s*" ("\d+" as num)) =>
+    (
+      "[[:word:]]+"
+      "[[:space:]]*"
+      "[+\-*/]"
+      "[[:space:]]*"
+      ("[[:digit:]]+" as num)
+    ) =>
       if num.to_string() == "42" {
         ()
       } else {
@@ -402,15 +416,15 @@ test "Capture integer from expression" {
 test "Capture UUID part" {
   lexmatch "550e8400-e29b-41d4-a716-446655440000" {
     (
-      ("[\da-f]{8}" as part1)
+      ("[[:digit:]a-f]{8}" as part1)
       "-"
-      "[\da-f]{4}"
+      "[[:digit:]a-f]{4}"
       "-"
-      "[\da-f]{4}"
+      "[[:digit:]a-f]{4}"
       "-"
-      "[\da-f]{4}"
+      "[[:digit:]a-f]{4}"
       "-"
-      "[\da-f]{12}"
+      "[[:digit:]a-f]{12}"
     ) =>
       if part1.to_string() == "550e8400" {
         ()
@@ -424,7 +438,7 @@ test "Capture UUID part" {
 ///|
 test "Capture whitespace-separated word" {
   lexmatch "  hello  " {
-    ("\s*" ("\w+" as word) "\s*") =>
+    ("[[:space:]]*" ("[[:word:]]+" as word) "[[:space:]]*") =>
       if word.to_string() == "hello" {
         ()
       } else {
@@ -437,7 +451,7 @@ test "Capture whitespace-separated word" {
 ///|
 test "Capture number with optional sign" {
   lexmatch "+123" {
-    (("[+\-]" as sign) ("\d+" as num)) =>
+    (("[+\-]" as sign) ("[[:digit:]]+" as num)) =>
       if sign == '+' && num.to_string() == "123" {
         ()
       } else {
@@ -450,7 +464,7 @@ test "Capture number with optional sign" {
 ///|
 test "Capture decimal number parts" {
   lexmatch "3.14" {
-    (("\d+" as intpart) "." ("\d+" as fracpart)) =>
+    (("[[:digit:]]+" as intpart) "." ("[[:digit:]]+" as fracpart)) =>
       if intpart.to_string() == "3" && fracpart.to_string() == "14" {
         ()
       } else {
@@ -476,7 +490,7 @@ test "Capture escaped character" {
 ///|
 test "Capture HTML tag name" {
   lexmatch "<div>" {
-    ("<" ("[a-zA-Z]\w*" as tagname) ">") =>
+    ("<" ("[a-zA-Z][[:word:]]*" as tagname) ">") =>
       if tagname.to_string() == "div" {
         ()
       } else {
@@ -489,7 +503,7 @@ test "Capture HTML tag name" {
 ///|
 test "Capture CSS class name" {
   lexmatch ".my-class" {
-    ("\." ("[\w\-]+" as classname)) =>
+    ("\." ("[[:word:]\-]+" as classname)) =>
       if classname.to_string() == "my-class" {
         ()
       } else {
@@ -502,7 +516,7 @@ test "Capture CSS class name" {
 ///|
 test "Capture JSON key" {
   lexmatch "\"name\": \"value\"" {
-    ("\"" ("\w+" as key) "\"" ":" ".*") =>
+    ("\"" ("[[:word:]]+" as key) "\"" ":" ".*") =>
       if key.to_string() == "name" {
         ()
       } else {
@@ -515,7 +529,7 @@ test "Capture JSON key" {
 ///|
 test "Capture environment variable" {
   lexmatch "$HOME" {
-    ("\$" ("[A-Z_]\w*" as envvar)) =>
+    ("\$" ("[A-Z_][[:word:]]*" as envvar)) =>
       if envvar.to_string() == "HOME" {
         ()
       } else {
@@ -541,12 +555,13 @@ test "Capture path component" {
 ///|
 test "Capture operator from expression" {
   lexmatch "a + b" {
-    ("\w+" "\s*" ("[+\-*/]" as op) "\s*" "\w+") =>
-      if op == '+' {
-        ()
-      } else {
-        fail("Should capture operator")
-      }
+    (
+      "[[:word:]]+"
+      "[[:space:]]*"
+      ("[+\-*/]" as op)
+      "[[:space:]]*"
+      "[[:word:]]+"
+    ) => if op == '+' { () } else { fail("Should capture operator") }
     _ => fail("Should match")
   }
 }
@@ -567,7 +582,7 @@ test "Capture git hash prefix" {
 ///|
 test "Capture username from email" {
   lexmatch "john.doe@example.com" {
-    (("[\w\.]+" as username) "@" "\w+" "." "\w+") =>
+    (("[[:word:]\.]+" as username) "@" "[[:word:]]+" "." "[[:word:]]+") =>
       if username.to_string() == "john.doe" {
         ()
       } else {
@@ -580,7 +595,7 @@ test "Capture username from email" {
 ///|
 test "Capture port from URL" {
   lexmatch "localhost:8080" {
-    ("\w+" ":" ("\d+" as port)) =>
+    ("[[:word:]]+" ":" ("[[:digit:]]+" as port)) =>
       if port.to_string() == "8080" {
         ()
       } else {
@@ -593,7 +608,7 @@ test "Capture port from URL" {
 ///|
 test "Capture scientific notation exponent" {
   lexmatch "1.5e-10" {
-    ("\d+" "." "\d+" "[eE]" "[+\-]" ("\d+" as exp)) =>
+    ("[[:digit:]]+" "." "[[:digit:]]+" "[eE]" "[+\-]" ("[[:digit:]]+" as exp)) =>
       if exp.to_string() == "10" {
         ()
       } else {
@@ -606,7 +621,7 @@ test "Capture scientific notation exponent" {
 ///|
 test "Capture array index" {
   lexmatch "arr[5]" {
-    ("\w+" "\[" ("\d+" as index) "\]") =>
+    ("[[:word:]]+" "\[" ("[[:digit:]]+" as index) "\]") =>
       if index.to_string() == "5" {
         ()
       } else {
@@ -632,7 +647,7 @@ test "Capture CSS hex color short form" {
 ///|
 test "Capture query parameter name" {
   lexmatch "?name=value" {
-    ("\?" ("\w+" as param) "=" ".*") =>
+    ("\?" ("[[:word:]]+" as param) "=" ".*") =>
       if param.to_string() == "name" {
         ()
       } else {
@@ -645,7 +660,7 @@ test "Capture query parameter name" {
 ///|
 test "Capture markdown heading level" {
   lexmatch "### Title" {
-    (("#{1,6}" as level) "\s" ".*") =>
+    (("#{1,6}" as level) "[[:space:]]" ".*") =>
       if level.to_string() == "###" {
         ()
       } else {

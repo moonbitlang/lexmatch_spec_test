@@ -47,7 +47,7 @@ test "(?i:...) - word pattern" {
 ///|
 test "(?i:...) - with character classes" {
   lexmatch "ABC123" {
-    "(?i:[a-z]+)\d+" => ()
+    "(?i:[a-z]+)[[:digit:]]+" => ()
     _ => fail("Should match case insensitive letters with digits")
   }
 }
@@ -75,11 +75,11 @@ test "(?i:...) - protocol matching" {
 ///|
 test "(?i:...) - file extension" {
   lexmatch "file.TXT" {
-    ("\w+" "\." "(?i:txt)") => ()
+    ("[[:word:]]+" "\." "(?i:txt)") => ()
     _ => fail("Should match .TXT extension")
   }
   lexmatch "doc.Pdf" {
-    ("\w+" "\." "(?i:pdf)") => ()
+    ("[[:word:]]+" "\." "(?i:pdf)") => ()
     _ => fail("Should match .Pdf extension")
   }
 }
@@ -189,7 +189,7 @@ test "(?i:...) - with rest variable" {
 ///|
 test "(?i:...) - multiple modifiers in pattern" {
   lexmatch "HTTP FTP" {
-    ("(?i:http)" "\s" "(?i:ftp)") => ()
+    ("(?i:http)" "[[:space:]]" "(?i:ftp)") => ()
     _ => fail("Should match both case insensitive")
   }
 }
@@ -245,7 +245,15 @@ test "Case sensitive outside modifier scope" {
 ///|
 test "(?i:...) - SQL keywords" {
   lexmatch "SELECT * FROM table" {
-    ("(?i:select)" "\s" ".*" "\s" "(?i:from)" "\s" "\w+") => ()
+    (
+      "(?i:select)"
+      "[[:space:]]"
+      ".*"
+      "[[:space:]]"
+      "(?i:from)"
+      "[[:space:]]"
+      "[[:word:]]+"
+    ) => ()
     _ => fail("Should match SQL statement")
   }
 }
@@ -313,7 +321,7 @@ test "(?i:...) - file types" {
 ///|
 test "(?i:...) - with digits unaffected" {
   lexmatch "Test123" {
-    "(?i:test)\d+" => ()
+    "(?i:test)[[:digit:]]+" => ()
     _ => fail("Digits should match normally")
   }
 }

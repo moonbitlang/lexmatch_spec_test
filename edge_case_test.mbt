@@ -21,7 +21,7 @@ test "Edge - empty pattern alternation" {
 ///|
 test "Edge - single character" {
   let text = "a"
-  if text lexmatch? "\w" with longest {
+  if text lexmatch? "[[:word:]]" with longest {
     ()
   } else {
     fail("Should match single char")
@@ -31,7 +31,7 @@ test "Edge - single character" {
 ///|
 test "Edge - only whitespace" {
   let text = "   "
-  if text lexmatch? "\s+" with longest {
+  if text lexmatch? "[[:space:]]+" with longest {
     ()
   } else {
     fail("Should match whitespace")
@@ -271,7 +271,7 @@ test "Edge - mixed ASCII and Unicode" {
 ///|
 test "Edge - number at boundary" {
   let text = "0"
-  if text lexmatch? "\d" with longest {
+  if text lexmatch? "[[:digit:]]" with longest {
     ()
   } else {
     fail("Should match zero")
@@ -281,7 +281,7 @@ test "Edge - number at boundary" {
 ///|
 test "Edge - number nine" {
   let text = "9"
-  if text lexmatch? "\d" with longest {
+  if text lexmatch? "[[:digit:]]" with longest {
     ()
   } else {
     fail("Should match nine")
@@ -331,7 +331,7 @@ test "Edge - uppercase Z" {
 ///|
 test "Edge - underscore in word class" {
   let text = "_"
-  if text lexmatch? "\w" with longest {
+  if text lexmatch? "[[:word:]]" with longest {
     ()
   } else {
     fail("Should match underscore")
@@ -341,40 +341,40 @@ test "Edge - underscore in word class" {
 ///|
 test "Edge - space is not word char" {
   let text = " "
-  if not(text lexmatch? "\w" with longest) {
+  if not(text lexmatch? "[[:word:]]" with longest) {
     ()
   } else {
-    fail("Space should not match \\w")
+    fail("Space should not match [[:word:]]")
   }
 }
 
 ///|
 test "Edge - newline is whitespace" {
   let text = "\n"
-  if text lexmatch? "\s" with longest {
+  if text lexmatch? "[[:space:]]" with longest {
     ()
   } else {
-    fail("Newline should match \\s")
+    fail("Newline should match [[:space:]]")
   }
 }
 
 ///|
 test "Edge - letter is not whitespace" {
   let text = "a"
-  if not(text lexmatch? "\s" with longest) {
+  if not(text lexmatch? "[[:space:]]" with longest) {
     ()
   } else {
-    fail("Letter should not match \\s")
+    fail("Letter should not match [[:space:]]")
   }
 }
 
 ///|
 test "Edge - letter is not digit" {
   let text = "a"
-  if not(text lexmatch? "\d" with longest) {
+  if not(text lexmatch? "[[:digit:]]" with longest) {
     ()
   } else {
-    fail("Letter should not match \\d")
+    fail("Letter should not match [[:digit:]]")
   }
 }
 

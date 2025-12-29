@@ -1,149 +1,149 @@
 // Character class tests - comprehensive coverage of character classes and their combinations
 
 ///|
-test "\\s+ multiple whitespace" {
+test "[[:space:]]+ multiple whitespace" {
   lexmatch "   " {
-    "\s+" => ()
+    "[[:space:]]+" => ()
     _ => fail("Should match multiple spaces")
   }
   lexmatch " \t\n" {
-    "\s+" => ()
+    "[[:space:]]+" => ()
     _ => fail("Should match mixed whitespace")
   }
 }
 
 ///|
-test "\\d+ multiple digits" {
+test "[[:digit:]]+ multiple digits" {
   lexmatch "12345" {
-    "\d+" => ()
+    "[[:digit:]]+" => ()
     _ => fail("Should match multiple digits")
   }
   lexmatch "0" {
-    "\d+" => ()
+    "[[:digit:]]+" => ()
     _ => fail("Should match single digit")
   }
 }
 
 ///|
-test "\\w+ word sequence" {
+test "[[:word:]]+ word sequence" {
   lexmatch "abc123_XYZ" {
-    "\w+" => ()
+    "[[:word:]]+" => ()
     _ => fail("Should match word characters")
   }
 }
 
 ///|
-test "[\\d\\w] - digit or word character" {
+test "[[:digit:][:word:]] - digit or word character" {
   lexmatch "5" {
-    "[\d\w]" => ()
+    "[[:digit:][:word:]]" => ()
     _ => fail("Should match digit")
   }
   lexmatch "a" {
-    "[\d\w]" => ()
+    "[[:digit:][:word:]]" => ()
     _ => fail("Should match letter")
   }
   lexmatch "_" {
-    "[\d\w]" => ()
+    "[[:digit:][:word:]]" => ()
     _ => fail("Should match underscore")
   }
 }
 
 ///|
-test "[\\s\\d] - whitespace or digit" {
+test "[[:space:][:digit:]] - whitespace or digit" {
   lexmatch " " {
-    "[\s\d]" => ()
+    "[[:space:][:digit:]]" => ()
     _ => fail("Should match space")
   }
   lexmatch "5" {
-    "[\s\d]" => ()
+    "[[:space:][:digit:]]" => ()
     _ => fail("Should match digit")
   }
   lexmatch "\t" {
-    "[\s\d]" => ()
+    "[[:space:][:digit:]]" => ()
     _ => fail("Should match tab")
   }
   lexmatch "a" {
-    "[\s\d]" => fail("Should not match letter")
+    "[[:space:][:digit:]]" => fail("Should not match letter")
     _ => ()
   }
 }
 
 ///|
-test "[\\w\\s]+ - word or whitespace sequence" {
+test "[[:word:][:space:]]+ - word or whitespace sequence" {
   lexmatch "hello world" {
-    "[\w\s]+" => ()
+    "[[:word:][:space:]]+" => ()
     _ => fail("Should match words with spaces")
   }
   lexmatch "test_123 \t value" {
-    "[\w\s]+" => ()
+    "[[:word:][:space:]]+" => ()
     _ => fail("Should match complex sequence")
   }
 }
 
 ///|
-test "[^\\d] - not a digit" {
+test "[^[:digit:]] - not a digit" {
   lexmatch "a" {
-    "[^\d]" => ()
+    "[^[:digit:]]" => ()
     _ => fail("Should match non-digit")
   }
   lexmatch " " {
-    "[^\d]" => ()
+    "[^[:digit:]]" => ()
     _ => fail("Should match space")
   }
   lexmatch "5" {
-    "[^\d]" => fail("Should not match digit")
+    "[^[:digit:]]" => fail("Should not match digit")
     _ => ()
   }
 }
 
 ///|
-test "[^\\s\\d] - not whitespace or digit" {
+test "[^[:space:][:digit:]] - not whitespace or digit" {
   lexmatch "a" {
-    "[^\s\d]" => ()
+    "[^[:space:][:digit:]]" => ()
     _ => fail("Should match letter")
   }
   lexmatch "_" {
-    "[^\s\d]" => ()
+    "[^[:space:][:digit:]]" => ()
     _ => fail("Should match underscore")
   }
   lexmatch "5" {
-    "[^\s\d]" => fail("Should not match digit")
+    "[^[:space:][:digit:]]" => fail("Should not match digit")
     _ => ()
   }
   lexmatch " " {
-    "[^\s\d]" => fail("Should not match space")
+    "[^[:space:][:digit:]]" => fail("Should not match space")
     _ => ()
   }
 }
 
 ///|
-test "[a-z\\d] - lowercase letter or digit" {
+test "[a-z[:digit:]] - lowercase letter or digit" {
   lexmatch "a" {
-    "[a-z\d]" => ()
+    "[a-z[:digit:]]" => ()
     _ => fail("Should match lowercase")
   }
   lexmatch "5" {
-    "[a-z\d]" => ()
+    "[a-z[:digit:]]" => ()
     _ => fail("Should match digit")
   }
   lexmatch "A" {
-    "[a-z\d]" => fail("Should not match uppercase")
+    "[a-z[:digit:]]" => fail("Should not match uppercase")
     _ => ()
   }
 }
 
 ///|
-test "[A-Z\\s] - uppercase or whitespace" {
+test "[A-Z[:space:]] - uppercase or whitespace" {
   lexmatch "A" {
-    "[A-Z\s]" => ()
+    "[A-Z[:space:]]" => ()
     _ => fail("Should match uppercase")
   }
   lexmatch " " {
-    "[A-Z\s]" => ()
+    "[A-Z[:space:]]" => ()
     _ => fail("Should match space")
   }
   lexmatch "a" {
-    "[A-Z\s]" => fail("Should not match lowercase")
+    "[A-Z[:space:]]" => fail("Should not match lowercase")
     _ => ()
   }
 }
@@ -201,123 +201,123 @@ test "[^a-zA-Z] - not a letter" {
 }
 
 ///|
-test "\\d\\d\\d - exactly three digits" {
+test "[[:digit:]][[:digit:]][[:digit:]] - exactly three digits" {
   lexmatch "123" {
-    "\d\d\d" => ()
+    "[[:digit:]][[:digit:]][[:digit:]]" => ()
     _ => fail("Should match three digits")
   }
   lexmatch "12" {
-    "\d\d\d" => fail("Should not match two digits")
+    "[[:digit:]][[:digit:]][[:digit:]]" => fail("Should not match two digits")
     _ => ()
   }
 }
 
 ///|
-test "\\w\\d\\w - word-digit-word pattern" {
+test "[[:word:]][[:digit:]][[:word:]] - word-digit-word pattern" {
   lexmatch "a5b" {
-    "\w\d\w" => ()
+    "[[:word:]][[:digit:]][[:word:]]" => ()
     _ => fail("Should match pattern")
   }
   lexmatch "_9Z" {
-    "\w\d\w" => ()
+    "[[:word:]][[:digit:]][[:word:]]" => ()
     _ => fail("Should match with underscore and uppercase")
   }
 }
 
 ///|
-test "[\\da-f]+ - hex lowercase with digits" {
+test "[[:digit:]a-f]+ - hex lowercase with digits" {
   lexmatch "12ab" {
-    "[\da-f]+" => ()
+    "[[:digit:]a-f]+" => ()
     _ => fail("Should match hex lowercase")
   }
   lexmatch "ff00" {
-    "[\da-f]+" => ()
+    "[[:digit:]a-f]+" => ()
     _ => fail("Should match hex number")
   }
   lexmatch "12AB" {
-    "[\da-f]+" => fail("Should not match uppercase hex")
+    "[[:digit:]a-f]+" => fail("Should not match uppercase hex")
     _ => ()
   }
 }
 
 ///|
-test "[\\s\\S] - any character (whitespace or non-whitespace)" {
+test "[[:space:]]|[^[:space:]] - any character (whitespace or non-whitespace)" {
   lexmatch "a" {
-    "[\s\S]" => ()
+    "[[:space:]]|[^[:space:]]" => ()
     _ => fail("Should match letter")
   }
   lexmatch " " {
-    "[\s\S]" => ()
+    "[[:space:]]|[^[:space:]]" => ()
     _ => fail("Should match space")
   }
   lexmatch "\n" {
-    "[\s\S]" => ()
+    "[[:space:]]|[^[:space:]]" => ()
     _ => fail("Should match newline")
   }
 }
 
 ///|
-test "[\\d\\D] - any character (digit or non-digit)" {
+test "[[:digit:]|[^[:digit:]] - any character (digit or non-digit)" {
   lexmatch "5" {
-    "[\d\D]" => ()
+    "[[:digit:]]|[^[:digit:]]" => ()
     _ => fail("Should match digit")
   }
   lexmatch "x" {
-    "[\d\D]" => ()
+    "[[:digit:]]|[^[:digit:]]" => ()
     _ => fail("Should match non-digit")
   }
 }
 
 ///|
-test "[\\w\\W] - any character (word or non-word)" {
+test "[[:word:]|[^[:word:]] - any character (word or non-word)" {
   lexmatch "a" {
-    "[\w\W]" => ()
+    "[[:word:]]|[^[:word:]]" => ()
     _ => fail("Should match word char")
   }
   lexmatch "!" {
-    "[\w\W]" => ()
+    "[[:word:]]|[^[:word:]]" => ()
     _ => fail("Should match non-word char")
   }
 }
 
 ///|
-test "\\S+ - non-whitespace sequence" {
+test "[^[:space:]]+ - non-whitespace sequence" {
   lexmatch "hello" {
-    "\S+" => ()
+    "[^[:space:]]+" => ()
     _ => fail("Should match word without spaces")
   }
   lexmatch "a1b2c3" {
-    "\S+" => ()
+    "[^[:space:]]+" => ()
     _ => fail("Should match alphanumeric")
   }
 }
 
 ///|
-test "\\D+ - non-digit sequence" {
+test "[^[:digit:]]+ - non-digit sequence" {
   lexmatch "abc" {
-    "\D+" => ()
+    "[^[:digit:]]+" => ()
     _ => fail("Should match letters")
   }
   lexmatch "   " {
-    "\D+" => ()
+    "[^[:digit:]]+" => ()
     _ => fail("Should match spaces")
   }
 }
 
 ///|
-test "\\W+ - non-word character sequence" {
+test "[^[:word:]]+ - non-word character sequence" {
   lexmatch "   " {
-    "\W+" => ()
+    "[^[:word:]]+" => ()
     _ => fail("Should match spaces")
   }
   lexmatch "!@#" {
-    "\W+" => ()
+    "[^[:word:]]+" => ()
     _ => fail("Should match punctuation")
   }
 }
 
 ///|
-test "[a-zA-Z0-9_] - equivalent to \\w" {
+test "[a-zA-Z0-9_] - equivalent to [[:word:]]" {
   lexmatch "a" {
     "[a-zA-Z0-9_]" => ()
     _ => fail("Should match lowercase")
@@ -337,7 +337,7 @@ test "[a-zA-Z0-9_] - equivalent to \\w" {
 }
 
 ///|
-test "[ \\t\\r\\n] - equivalent to \\s" {
+test "[ \\t\\r\\n] - equivalent to [[:space:]]" {
   lexmatch " " {
     "[ \t\r\n]" => ()
     _ => fail("Should match space")
@@ -357,7 +357,7 @@ test "[ \\t\\r\\n] - equivalent to \\s" {
 }
 
 ///|
-test "[0-9] - equivalent to \\d" {
+test "[0-9] - equivalent to [[:digit:]]" {
   lexmatch "0" {
     "[0-9]" => ()
     _ => fail("Should match 0")
@@ -373,57 +373,57 @@ test "[0-9] - equivalent to \\d" {
 }
 
 ///|
-test "\\s*\\w+\\s* - word with optional surrounding whitespace" {
+test "[[:space:]]*[[:word:]]+[[:space:]]* - word with optional surrounding whitespace" {
   lexmatch "hello" {
-    "\s*\w+\s*" => ()
+    "[[:space:]]*[[:word:]]+[[:space:]]*" => ()
     _ => fail("Should match word without spaces")
   }
   lexmatch " hello " {
-    "\s*\w+\s*" => ()
+    "[[:space:]]*[[:word:]]+[[:space:]]*" => ()
     _ => fail("Should match word with spaces")
   }
   lexmatch "test" {
-    "\s*\w+\s*" => ()
+    "[[:space:]]*[[:word:]]+[[:space:]]*" => ()
     _ => fail("Should match word")
   }
 }
 
 ///|
-test "\\d+\\.\\d+ - decimal number pattern" {
+test "[[:digit:]]+\\.[[:digit:]]+ - decimal number pattern" {
   lexmatch "3.14" {
-    "\d+\.\d+" => ()
+    "[[:digit:]]+\.[[:digit:]]+" => ()
     _ => fail("Should match decimal")
   }
   lexmatch "123.456" {
-    "\d+\.\d+" => ()
+    "[[:digit:]]+\.[[:digit:]]+" => ()
     _ => fail("Should match multi-digit decimal")
   }
 }
 
 ///|
-test "[+\\-]?\\d+ - optional sign with digits" {
+test "[+\\-]?[[:digit:]]+ - optional sign with digits" {
   lexmatch "123" {
-    "[+\-]?\d+" => ()
+    "[+\-]?[[:digit:]]+" => ()
     _ => fail("Should match unsigned number")
   }
   lexmatch "+123" {
-    "[+\-]?\d+" => ()
+    "[+\-]?[[:digit:]]+" => ()
     _ => fail("Should match positive number")
   }
   lexmatch "-456" {
-    "[+\-]?\d+" => ()
+    "[+\-]?[[:digit:]]+" => ()
     _ => fail("Should match negative number")
   }
 }
 
 ///|
-test "\\s+[a-zA-Z]+\\s+ - word surrounded by whitespace" {
+test "[[:space:]]+[a-zA-Z]+[[:space:]]+ - word surrounded by whitespace" {
   lexmatch " hello " {
-    "\s+[a-zA-Z]+\s+" => ()
+    "[[:space:]]+[a-zA-Z]+[[:space:]]+" => ()
     _ => fail("Should match word with spaces")
   }
   lexmatch "\tworld\n" {
-    "\s+[a-zA-Z]+\s+" => ()
+    "[[:space:]]+[a-zA-Z]+[[:space:]]+" => ()
     _ => fail("Should match word with tab and newline")
   }
 }
@@ -469,37 +469,39 @@ test "[a-zA-Z_][a-zA-Z0-9_]* - full identifier pattern" {
 }
 
 ///|
-test "\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3} - IP address pattern" {
+test "[[:digit:]]{1,3}\\.[[:digit:]]{1,3}\\.[[:digit:]]{1,3}\\.[[:digit:]]{1,3} - IP address pattern" {
   lexmatch "192.168.1.1" {
-    "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}" => ()
+    "[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}" =>
+      ()
     _ => fail("Should match IP address")
   }
   lexmatch "0.0.0.0" {
-    "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}" => ()
+    "[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}" =>
+      ()
     _ => fail("Should match zero IP")
   }
 }
 
 ///|
-test "[\\da-fA-F]{2}:[\\da-fA-F]{2} - hex byte pair pattern" {
+test "[[:digit:]a-fA-F]{2}:[[:digit:]a-fA-F]{2} - hex byte pair pattern" {
   lexmatch "FF:00" {
-    "[\da-fA-F]{2}:[\da-fA-F]{2}" => ()
+    "[[:digit:]a-fA-F]{2}:[[:digit:]a-fA-F]{2}" => ()
     _ => fail("Should match hex byte pair")
   }
   lexmatch "12:ab" {
-    "[\da-fA-F]{2}:[\da-fA-F]{2}" => ()
+    "[[:digit:]a-fA-F]{2}:[[:digit:]a-fA-F]{2}" => ()
     _ => fail("Should match lowercase hex pair")
   }
 }
 
 ///|
-test "\\w+@\\w+\\.\\w+ - simple email pattern" {
+test "[[:word:]]+@[[:word:]]+\\.[[:word:]]+ - simple email pattern" {
   lexmatch "user@example.com" {
-    "\w+@\w+\.\w+" => ()
+    "[[:word:]]+@[[:word:]]+\.[[:word:]]+" => ()
     _ => fail("Should match simple email")
   }
   lexmatch "test123@domain.org" {
-    "\w+@\w+\.\w+" => ()
+    "[[:word:]]+@[[:word:]]+\.[[:word:]]+" => ()
     _ => fail("Should match email with numbers")
   }
 }
@@ -529,73 +531,73 @@ test "[0-9]+[a-z]+ - numbers followed by letters" {
 }
 
 ///|
-test "\\d+[eE][+\\-]?\\d+ - scientific notation exponent" {
+test "[[:digit:]]+[eE][+\\-]?[[:digit:]]+ - scientific notation exponent" {
   lexmatch "123e10" {
-    "\d+[eE][+\-]?\d+" => ()
+    "[[:digit:]]+[eE][+\-]?[[:digit:]]+" => ()
     _ => fail("Should match exponent")
   }
   lexmatch "5E+3" {
-    "\d+[eE][+\-]?\d+" => ()
+    "[[:digit:]]+[eE][+\-]?[[:digit:]]+" => ()
     _ => fail("Should match positive exponent")
   }
   lexmatch "2e-5" {
-    "\d+[eE][+\-]?\d+" => ()
+    "[[:digit:]]+[eE][+\-]?[[:digit:]]+" => ()
     _ => fail("Should match negative exponent")
   }
 }
 
 ///|
-test "[\\w\\-]+ - word characters and hyphens" {
+test "[[:word:]\\-]+ - word characters and hyphens" {
   lexmatch "hello-world" {
-    "[\w\-]+" => ()
+    "[[:word:]\-]+" => ()
     _ => fail("Should match hyphenated word")
   }
   lexmatch "test_value-123" {
-    "[\w\-]+" => ()
+    "[[:word:]\-]+" => ()
     _ => fail("Should match complex identifier")
   }
 }
 
 ///|
-test "[\\w\\.]+ - word characters and dots" {
+test "[[:word:]\\.]+ - word characters and dots" {
   lexmatch "file.txt" {
-    "[\w\.]+" => ()
+    "[[:word:]\.]+" => ()
     _ => fail("Should match filename")
   }
   lexmatch "my.package.name" {
-    "[\w\.]+" => ()
+    "[[:word:]\.]+" => ()
     _ => fail("Should match package name")
   }
 }
 
 ///|
-test "[\\d,]+ - digits and commas" {
+test "[[:digit:],]+ - digits and commas" {
   lexmatch "1,234,567" {
-    "[\d,]+" => ()
+    "[[:digit:],]+" => ()
     _ => fail("Should match formatted number")
   }
   lexmatch "1000" {
-    "[\d,]+" => ()
+    "[[:digit:],]+" => ()
     _ => fail("Should match plain number")
   }
 }
 
 ///|
-test "\\s*[+\\-*/]\\s* - operator with optional spaces" {
+test "[[:space:]]*[+\\-*/][[:space:]]* - operator with optional spaces" {
   lexmatch "+" {
-    "\s*[+\-*/]\s*" => ()
+    "[[:space:]]*[+\-*/][[:space:]]*" => ()
     _ => fail("Should match plus")
   }
   lexmatch " - " {
-    "\s*[+\-*/]\s*" => ()
+    "[[:space:]]*[+\-*/][[:space:]]*" => ()
     _ => fail("Should match minus with spaces")
   }
   lexmatch "*" {
-    "\s*[+\-*/]\s*" => ()
+    "[[:space:]]*[+\-*/][[:space:]]*" => ()
     _ => fail("Should match multiply")
   }
   lexmatch "  /  " {
-    "\s*[+\-*/]\s*" => ()
+    "[[:space:]]*[+\-*/][[:space:]]*" => ()
     _ => fail("Should match divide with spaces")
   }
 }

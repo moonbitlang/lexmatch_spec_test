@@ -47,11 +47,14 @@ pub fn wordcount(
   }
 }
 ```
-```mbt test
-inspect(
-  wordcount("Hello World\nThis is MoonBit.", 0, 0, 0),
-  content="(1, 5, 27)",
-)
+```mbt check
+///|
+test {
+  inspect(
+    wordcount("Hello World\nThis is MoonBit.", 0, 0, 0),
+    content="(1, 5, 27)",
+  )
+}
 ```
 The above example demonstrates how to use the `lexmatch` expression to perform lexical analysis on `input`, counting the number of lines, words, and characters. The patterns here include the ability to capture substrings, for example, the pattern `("[^ \t\r\n]+" as word, rest)` can match a sequence of non-whitespace characters and capture it as `word`.
 
@@ -68,9 +71,12 @@ pub fn downloadable_protocol(url : StringView) -> StringView? {
 }
 ```
 
-```mbt test
-@json.inspect(downloadable_protocol("https://example.com"), content=["https"])
-@json.inspect(downloadable_protocol("FTP://example.com"), content=["FTP"])
+```mbt check
+///|
+test {
+  @json.inspect(downloadable_protocol("https://example.com"), content=["https"])
+  @json.inspect(downloadable_protocol("FTP://example.com"), content=["FTP"])
+}
 ```
 
 This example demonstrates how to use the `lexmatch?` expression to check whether a `url` starts with a downloadable protocol (ftp, http, https) and capture that protocol. This also demonstrates the use of the case-insensitive modifier `(?i:...)`.
@@ -79,39 +85,44 @@ This example demonstrates how to use the `lexmatch?` expression to check whether
 
 This example shows how to use `lexmatch` to parse structured log data and extract error entries with their timestamps and messages. The pattern uses a wildcard prefix `_` to skip over non-matching content before finding `ERROR` lines.
 
-```mbt test
-let log =
-  #|INFO 2024-01-01 12:00:00 Starting service
-  #|ERROR 2024-01-01 12:05:00 Failed to start service
-  #|WARN 2024-01-01 12:10:00 Low memory
-  #|INFO 2024-01-01 12:15:00 Service started successfully
-  #|ERROR 2024-01-01 12:20:00 Service crashed unexpectedly
-  #|ERROR 2024-01-01 12:25:00 Failed to restart service
-let error_logs : Array[Json] = []
-for curr = log[:] {
-  lexmatch curr {
-    (
-      _,
-      "ERROR[ ]*"
-      ("\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}" as timestamp)
-      "[ ]*"
-      ("[^\n]*" as message)
-      "\n",
-      next
-    ) => {
-      error_logs.push({ "timestamp": timestamp, "message": message })
-      continue next
+```mbt check
+///|
+test {
+  let log =
+    #|INFO 2024-01-01 12:00:00 Starting service
+    #|ERROR 2024-01-01 12:05:00 Failed to start service
+    #|WARN 2024-01-01 12:10:00 Low memory
+    #|INFO 2024-01-01 12:15:00 Service started successfully
+    #|ERROR 2024-01-01 12:20:00 Service crashed unexpectedly
+    #|ERROR 2024-01-01 12:25:00 Failed to restart service
+  let error_logs : Array[Json] = []
+  for curr = log[:] {
+    lexmatch curr {
+      (
+        _,
+        "ERROR[ ]*"
+        (
+          "[[:digit:]]{4}-[[:digit:]]{2}-[[:digit:]]{2} [[:digit:]]{2}:[[:digit:]]{2}:[[:digit:]]{2}" as timestamp
+        )
+        "[ ]*"
+        ("[^\n]*" as message)
+        "\n",
+        next
+      ) => {
+        error_logs.push({ "timestamp": timestamp, "message": message })
+        continue next
+      }
+      _ => break
     }
-    _ => break
   }
+  @json.inspect(error_logs, content=[
+    { "timestamp": "2024-01-01 12:05:00", "message": "Failed to start service" },
+    {
+      "timestamp": "2024-01-01 12:20:00",
+      "message": "Service crashed unexpectedly",
+    },
+  ])
 }
-@json.inspect(error_logs, content=[
-  { "timestamp": "2024-01-01 12:05:00", "message": "Failed to start service" },
-  {
-    "timestamp": "2024-01-01 12:20:00",
-    "message": "Service crashed unexpectedly",
-  },
-])
 ```
 
 ### Core Concepts
@@ -145,9 +156,9 @@ for curr = log[:] {
 
   **Examples:**
   - `""` — matches empty string (entire target must be empty)
-  - `"\d+"` — matches if entire target consists of digits
-  - `("\d+", rest)` — matches digits at the start; `rest` gets the remainder
-  - `(_, "ERROR" ("\d+" as code), rest)` — finds "ERROR" followed by digits anywhere in the target; captures the digits as `code`
+  - `"[[:digit:]]+"` — matches if entire target consists of digits
+  - `("[[:digit:]]+", rest)` — matches digits at the start; `rest` gets the remainder
+  - `(_, "ERROR" ("[[:digit:]]+" as code), rest)` — finds "ERROR" followed by digits anywhere in the target; captures the digits as `code`
 
 #### Lex Pattern Forms - Examples
 
@@ -155,67 +166,76 @@ The following examples demonstrate the three lex pattern forms and their anchori
 
 **Bare regex (left + right anchored)** — must match the entire target:
 
-```mbt test
-// Bare regex matches entire target
-let result = if "12345" lexmatch? "\d+" {
-  "all digits"
-} else {
-  "not all digits"
-}
-inspect(result, content="all digits")
+```mbt check
+///|
+test {
+  // Bare regex matches entire target
+  let result = if "12345" lexmatch? "[[:digit:]]+" {
+    "all digits"
+  } else {
+    "not all digits"
+  }
+  inspect(result, content="all digits")
 
-// Fails if there's extra content
-let result2 = if "123abc" lexmatch? "\d+" {
-  "all digits"
-} else {
-  "not all digits"
-}
-inspect(result2, content="not all digits")
+  // Fails if there's extra content
+  let result2 = if "123abc" lexmatch? "[[:digit:]]+" {
+    "all digits"
+  } else {
+    "not all digits"
+  }
+  inspect(result2, content="not all digits")
 
-// Empty string pattern matches empty target
-let result3 = if "" lexmatch? "" { "empty" } else { "not empty" }
-inspect(result3, content="empty")
+  // Empty string pattern matches empty target
+  let result3 = if "" lexmatch? "" { "empty" } else { "not empty" }
+  inspect(result3, content="empty")
+}
 ```
 
 **Two-part (left anchored only)** — matches prefix, rest captures remainder:
 
-```mbt test
-// Two-part: matches prefix, captures rest
-lexmatch "123abc" with longest {
-  ("\d+" as digits, rest) => {
-    inspect(digits, content="123")
-    inspect(rest, content="abc")
+```mbt check
+///|
+test {
+  // Two-part: matches prefix, captures rest
+  lexmatch "123abc" with longest {
+    ("[[:digit:]]+" as digits, rest) => {
+      inspect(digits, content="123")
+      inspect(rest, content="abc")
+    }
+    _ => fail("should match")
   }
-  _ => fail("should match")
-}
 
-// Two-part must start from beginning
-let matched = "abc123" lexmatch? ("\d+", _) with longest
-inspect(matched, content="false") // digits not at start
+  // Two-part must start from beginning
+  let matched = "abc123" lexmatch? ("[[:digit:]]+", _) with longest
+  inspect(matched, content="false") // digits not at start
+}
 ```
 
 **Three-part (no anchoring)** — prefix skips content, regex matches anywhere.
 
 **Note:** Three-part form is only available without `with longest`:
 
-```mbt test
+```mbt check
+///|
+test {
   // Three-part: prefix binds the skipped content, find pattern anywhere (no 'with longest')
-lexmatch "hello ERROR123 world" {
-  (prefix, "ERROR" ("\d+" as code), rest) => {
-    inspect(prefix, content="hello ")
-    inspect(code, content="123")
-    inspect(rest, content=" world")
+  lexmatch "hello ERROR123 world" {
+    (prefix, "ERROR" ("[[:digit:]]+" as code), rest) => {
+      inspect(prefix, content="hello ")
+      inspect(code, content="123")
+      inspect(rest, content=" world")
+    }
+    _ => fail("should not match")
   }
-  _ => fail("should not match")
-}
 
-// Three-part can find pattern in middle of string
-lexmatch "prefix>>>MARKER<<<suffix" {
-  (prefix, "MARKER", rest) => {
-    inspect(prefix, content="prefix>>>")
-    inspect(rest, content="<<<suffix")
+  // Three-part can find pattern in middle of string
+  lexmatch "prefix>>>MARKER<<<suffix" {
+    (prefix, "MARKER", rest) => {
+      inspect(prefix, content="prefix>>>")
+      inspect(rest, content="<<<suffix")
+    }
+    _ => fail("should not match")
   }
-  _ => fail("should not match")
 }
 ```
 
@@ -223,44 +243,50 @@ lexmatch "prefix>>>MARKER<<<suffix" {
 
 **Default (without `with` clause)** — the standard form for general string processing:
 
-```mbt test
-// Default strategy: first match, patterns tried in order
-lexmatch "hello world" {
-  ("hello", rest) => inspect(rest, content=" world")
-  _ => fail("should match")
-}
-
-// Three-part form is available in default mode
-lexmatch "abc123def" {
-  (prefix, "\d+" as digits, rest) => {
-    inspect(prefix, content="abc")
-    inspect(digits, content="123")
-    inspect(rest, content="def")
+```mbt check
+///|
+test {
+  // Default strategy: first match, patterns tried in order
+  lexmatch "hello world" {
+    ("hello", rest) => inspect(rest, content=" world")
+    _ => fail("should match")
   }
-  _ => fail("should match")
+
+  // Three-part form is available in default mode
+  lexmatch "abc123def" {
+    (prefix, "[[:digit:]]+" as digits, rest) => {
+      inspect(prefix, content="abc")
+      inspect(digits, content="123")
+      inspect(rest, content="def")
+    }
+    _ => fail("should match")
+  }
 }
 ```
 
 **`with longest`** — specialized for programming language lexers:
 
-```mbt test
-// With longest: all branches are checked, longest match wins
-// Here "[a-z]+" matches "ifx" (3 chars) vs "if" matches only 2 chars
-// So the second branch is selected because it matches longer
-lexmatch "ifx" with longest {
-  ("if", _) => fail("should not match - 'if' is only 2 chars")
-  ("[a-z]+" as id, rest) => {
-    inspect(id, content="ifx") // matched all 3 chars
-    inspect(rest, content="")
+```mbt check
+///|
+test {
+  // With longest: all branches are checked, longest match wins
+  // Here "[a-z]+" matches "ifx" (3 chars) vs "if" matches only 2 chars
+  // So the second branch is selected because it matches longer
+  lexmatch "ifx" with longest {
+    ("if", _) => fail("should not match - 'if' is only 2 chars")
+    ("[a-z]+" as id, rest) => {
+      inspect(id, content="ifx") // matched all 3 chars
+      inspect(rest, content="")
+    }
+    _ => fail("should match")
   }
-  _ => fail("should match")
-}
 
-// Compare with default (first match): "if" branch would win
-lexmatch "ifx" {
-  ("if", rest) => inspect(rest, content="x") // first match wins
-  ("[a-z]+", _) => fail("should not reach - first branch matched")
-  _ => fail("should match")
+  // Compare with default (first match): "if" branch would win
+  lexmatch "ifx" {
+    ("if", rest) => inspect(rest, content="x") // first match wins
+    ("[a-z]+", _) => fail("should not reach - first branch matched")
+    _ => fail("should match")
+  }
 }
 ```
 

@@ -42,7 +42,7 @@ test "Empty rest variable" {
 ///|
 test "Digit prefix with rest" {
   lexmatch "123abc" with longest {
-    ("\d+", rest) =>
+    ("[[:digit:]]+", rest) =>
       if rest.to_string() == "abc" {
         ()
       } else {
@@ -55,11 +55,11 @@ test "Digit prefix with rest" {
 ///|
 test "Word prefix with rest" {
   lexmatch "hello123" with longest {
-    ("\w+", rest) =>
+    ("[[:word:]]+", rest) =>
       if rest.to_string() == "" {
         ()
       } else {
-        fail("\\w+ should match everything")
+        fail("[[:word:]]+ should match everything")
       }
     _ => fail("Should match")
   }
@@ -68,7 +68,7 @@ test "Word prefix with rest" {
 ///|
 test "Whitespace prefix with rest" {
   lexmatch "   text" with longest {
-    ("\s+", rest) =>
+    ("[[:space:]]+", rest) =>
       if rest.to_string() == "text" {
         ()
       } else {
@@ -193,7 +193,7 @@ test "Character class with rest" {
 ///|
 test "Digit class with rest" {
   lexmatch "123abc" with longest {
-    ("\d+", rest) =>
+    ("[[:digit:]]+", rest) =>
       if rest.to_string() == "abc" {
         ()
       } else {
@@ -206,7 +206,7 @@ test "Digit class with rest" {
 ///|
 test "Non-whitespace with rest" {
   lexmatch "word space" with longest {
-    ("\S+", rest) =>
+    ("[^[:space:]]+", rest) =>
       if rest.to_string() == " space" {
         ()
       } else {
@@ -232,7 +232,7 @@ test "Quantifier with rest" {
 ///|
 test "Exact count with rest" {
   lexmatch "12345" {
-    ("\d{3}", rest) =>
+    ("[[:digit:]]{3}", rest) =>
       if rest.to_string() == "45" {
         ()
       } else {
@@ -297,7 +297,7 @@ test "Line processing with rest" {
 ///|
 test "Token extraction with rest" {
   lexmatch "token1 token2 token3" with longest {
-    ("\w+", rest) =>
+    ("[[:word:]]+", rest) =>
       if rest.to_string() == " token2 token3" {
         ()
       } else {
@@ -310,7 +310,7 @@ test "Token extraction with rest" {
 ///|
 test "Number extraction with rest" {
   lexmatch "123.456.789" with longest {
-    ("\d+", rest) =>
+    ("[[:digit:]]+", rest) =>
       if rest.to_string() == ".456.789" {
         ()
       } else {
@@ -415,13 +415,13 @@ test "Multiple patterns branching with rest" {
 ///|
 test "Iterative tokenization simulation" {
   lexmatch "a b c" with longest {
-    ("\w", rest) =>
+    ("[[:word:]]", rest) =>
       // First token 'a', rest ' b c'
       lexmatch rest with longest {
-        ("\s", rest2) =>
+        ("[[:space:]]", rest2) =>
           // Skip space, rest2 'b c'
           lexmatch rest2 with longest {
-            ("\w", rest3) =>
+            ("[[:word:]]", rest3) =>
               // Second token 'b', rest3 ' c'
               if rest3.to_string() == " c" {
                 ()
@@ -453,7 +453,7 @@ test "Longest match behavior - greedy quantifier" {
 ///|
 test "Longest match - character class" {
   lexmatch "12345abc" with longest {
-    ("\d+", rest) =>
+    ("[[:digit:]]+", rest) =>
       if rest.to_string() == "abc" {
         ()
       } else {
@@ -479,7 +479,7 @@ test "Capture and rest combination" {
 ///|
 test "Multiple captures with rest" {
   lexmatch "123abc" with longest {
-    (("\d+" as num) ("[a-z]+" as letters), rest) =>
+    (("[[:digit:]]+" as num) ("[a-z]+" as letters), rest) =>
       if num.to_string() == "123" &&
         letters.to_string() == "abc" &&
         rest.to_string() == "" {
@@ -507,11 +507,11 @@ test "Rest after sequence pattern" {
 ///|
 test "Nested lexmatch with rest" {
   lexmatch "first second" with longest {
-    ("\w+", rest) =>
+    ("[[:word:]]+", rest) =>
       lexmatch rest with longest {
-        ("\s+", rest2) =>
+        ("[[:space:]]+", rest2) =>
           lexmatch rest2 with longest {
-            ("\w+", rest3) =>
+            ("[[:word:]]+", rest3) =>
               if rest3.to_string() == "" {
                 ()
               } else {
@@ -554,7 +554,7 @@ test "Rest with newlines" {
 ///|
 test "Rest with tabs" {
   lexmatch "word\ttab\tdata" with longest {
-    ("\w+", rest) =>
+    ("[[:word:]]+", rest) =>
       if rest.to_string() == "\ttab\tdata" {
         ()
       } else {
@@ -607,7 +607,7 @@ test "Non-greedy simulation with explicit pattern" {
 ///|
 test "Word boundary simulation with rest" {
   lexmatch "word1 word2" with longest {
-    ("\w+", rest) =>
+    ("[[:word:]]+", rest) =>
       if rest.to_string() == " word2" {
         ()
       } else {
@@ -620,7 +620,7 @@ test "Word boundary simulation with rest" {
 ///|
 test "Mixed character classes with rest" {
   lexmatch "abc123!@#" with longest {
-    ("[\w]+", rest) =>
+    ("[[:word:]]+", rest) =>
       if rest.to_string() == "!@#" {
         ()
       } else {

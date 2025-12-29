@@ -35,105 +35,105 @@ test "[a-zA-Z]" {
 }
 
 ///|
-test "\\s - whitespace character class" {
+test "[[:space:]] - whitespace character class" {
   lexmatch " " {
-    "\s" => ()
+    "[[:space:]]" => ()
     _ => fail("Should match space")
   }
   lexmatch "\t" {
-    "\s" => ()
+    "[[:space:]]" => ()
     _ => fail("Should match tab")
   }
   lexmatch "\n" {
-    "\s" => ()
+    "[[:space:]]" => ()
     _ => fail("Should match newline")
   }
   lexmatch "a" {
-    "\s" => fail("Should not match non-whitespace")
+    "[[:space:]]" => fail("Should not match non-whitespace")
     _ => ()
   }
 }
 
 ///|
-test "\\S - non-whitespace character class" {
+test "[^[:space:]] - non-whitespace character class" {
   lexmatch "a" {
-    "\S" => ()
+    "[^[:space:]]" => ()
     _ => fail("Should match non-whitespace")
   }
   lexmatch " " {
-    "\S" => fail("Should not match whitespace")
+    "[^[:space:]]" => fail("Should not match whitespace")
     _ => ()
   }
 }
 
 ///|
-test "\\d - digit character class" {
+test "[[:digit:]] - digit character class" {
   lexmatch "5" {
-    "\d" => ()
+    "[[:digit:]]" => ()
     _ => fail("Should match digit")
   }
   lexmatch "0" {
-    "\d" => ()
+    "[[:digit:]]" => ()
     _ => fail("Should match digit 0")
   }
   lexmatch "9" {
-    "\d" => ()
+    "[[:digit:]]" => ()
     _ => fail("Should match digit 9")
   }
   lexmatch "a" {
-    "\d" => fail("Should not match non-digit")
+    "[[:digit:]]" => fail("Should not match non-digit")
     _ => ()
   }
 }
 
 ///|
-test "\\D - non-digit character class" {
+test "[^[:digit:]] - non-digit character class" {
   lexmatch "a" {
-    "\D" => ()
+    "[^[:digit:]]" => ()
     _ => fail("Should match non-digit")
   }
   lexmatch "5" {
-    "\D" => fail("Should not match digit")
+    "[^[:digit:]]" => fail("Should not match digit")
     _ => ()
   }
 }
 
 ///|
-test "\\w - word character class" {
+test "[[:word:]] - word character class" {
   lexmatch "a" {
-    "\w" => ()
+    "[[:word:]]" => ()
     _ => fail("Should match letter")
   }
   lexmatch "Z" {
-    "\w" => ()
+    "[[:word:]]" => ()
     _ => fail("Should match uppercase letter")
   }
   lexmatch "5" {
-    "\w" => ()
+    "[[:word:]]" => ()
     _ => fail("Should match digit")
   }
   lexmatch "_" {
-    "\w" => ()
+    "[[:word:]]" => ()
     _ => fail("Should match underscore")
   }
   lexmatch " " {
-    "\w" => fail("Should not match space")
+    "[[:word:]]" => fail("Should not match space")
     _ => ()
   }
   lexmatch "-" {
-    "\w" => fail("Should not match hyphen")
+    "[[:word:]]" => fail("Should not match hyphen")
     _ => ()
   }
 }
 
 ///|
-test "\\W - non-word character class" {
+test "[^[:word:]] - non-word character class" {
   lexmatch " " {
-    "\W" => ()
+    "[^[:word:]]" => ()
     _ => fail("Should match non-word character")
   }
   lexmatch "a" {
-    "\W" => fail("Should not match word character")
+    "[^[:word:]]" => fail("Should not match word character")
     _ => ()
   }
 }
@@ -468,21 +468,21 @@ test "Pattern with rest using longest strategy" {
 }
 
 ///|
-test "Character set combinations - [\\d\\s]" {
+test "Character set combinations - [[:digit:][:space:]]" {
   lexmatch "5" {
-    "[\d\s]" => ()
+    "[[:digit:][:space:]]" => ()
     _ => fail("Should match digit")
   }
   lexmatch " " {
-    "[\d\s]" => ()
+    "[[:digit:][:space:]]" => ()
     _ => fail("Should match space")
   }
   lexmatch "\t" {
-    "[\d\s]" => ()
+    "[[:digit:][:space:]]" => ()
     _ => fail("Should match tab")
   }
   lexmatch "a" {
-    "[\d\s]" => fail("Should not match letter")
+    "[[:digit:][:space:]]" => fail("Should not match letter")
     _ => ()
   }
 }
@@ -490,15 +490,16 @@ test "Character set combinations - [\\d\\s]" {
 ///|
 test "Complex pattern - identifier matching" {
   lexmatch "var123" {
-    "[a-zA-Z_]\w*" => ()
+    "[a-zA-Z_][[:word:]]*" => ()
     _ => fail("Should match identifier")
   }
   lexmatch "_test" {
-    "[a-zA-Z_]\w*" => ()
+    "[a-zA-Z_][[:word:]]*" => ()
     _ => fail("Should match identifier starting with underscore")
   }
   lexmatch "123abc" {
-    "[a-zA-Z_]\w*" => fail("Should not match identifier starting with digit")
+    "[a-zA-Z_][[:word:]]*" =>
+      fail("Should not match identifier starting with digit")
     _ => ()
   }
 }
@@ -506,7 +507,7 @@ test "Complex pattern - identifier matching" {
 ///|
 test "Multiple captures in sequence" {
   lexmatch "123abc" {
-    (("\d+" as num) ("[a-z]+" as word)) =>
+    (("[[:digit:]]+" as num) ("[a-z]+" as word)) =>
       if num.to_string() == "123" && word.to_string() == "abc" {
         ()
       } else {

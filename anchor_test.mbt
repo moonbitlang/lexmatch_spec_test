@@ -32,7 +32,7 @@ test "^ anchor with empty string" {
 ///|
 test "^ anchor with pattern sequence" {
   lexmatch "123abc" with longest {
-    (("^\d+" as nums) ("\w+" as letters), rest) =>
+    (("^[[:digit:]]+" as nums) ("[[:word:]]+" as letters), rest) =>
       if nums.to_string() == "123" &&
         letters.to_string() == "abc" &&
         rest.to_string() == "" {
@@ -73,7 +73,7 @@ test "^ anchor with quantifier" {
 ///|
 test "^ anchor with digit pattern" {
   lexmatch "42answer" with longest {
-    ("^\d+" as num, rest) =>
+    ("^[[:digit:]]+" as num, rest) =>
       if num.to_string() == "42" && rest.to_string() == "answer" {
         ()
       } else {
@@ -99,8 +99,9 @@ test "^ anchor with word pattern" {
 ///|
 test "^ anchor does not match after prefix consumption" {
   lexmatch "abc123" with longest {
-    ("." "^\d+", _) => fail("^ should not match after consuming a character")
-    ("^\w+" as all, rest) =>
+    ("." "^[[:digit:]]+", _) =>
+      fail("^ should not match after consuming a character")
+    ("^[[:word:]]+" as all, rest) =>
       if all.to_string() == "abc123" && rest.to_string() == "" {
         ()
       } else {
@@ -148,7 +149,7 @@ test "^ anchor with case insensitive modifier" {
 ///|
 test "^ anchor with optional pattern" {
   lexmatch "123" with longest {
-    ("^[+\-]?" ("\d+" as num), rest) =>
+    ("^[+\-]?" ("[[:digit:]]+" as num), rest) =>
       if num.to_string() == "123" && rest.to_string() == "" {
         ()
       } else {
@@ -157,7 +158,7 @@ test "^ anchor with optional pattern" {
     _ => fail("Should match")
   }
   lexmatch "+456" with longest {
-    ("^[+\-]" ("\d+" as num), rest) =>
+    ("^[+\-]" ("[[:digit:]]+" as num), rest) =>
       if num.to_string() == "456" && rest.to_string() == "" {
         ()
       } else {
@@ -209,7 +210,7 @@ test "^ anchor matches at string view start" {
 ///|
 test "^ anchor with whitespace pattern" {
   lexmatch "   text" with longest {
-    ("^\s+" as spaces, rest) =>
+    ("^[[:space:]]+" as spaces, rest) =>
       if spaces.to_string() == "   " && rest.to_string() == "text" {
         ()
       } else {
@@ -222,7 +223,7 @@ test "^ anchor with whitespace pattern" {
 ///|
 test "^ anchor with negated character class" {
   lexmatch "abc123" with longest {
-    ("^[^\d]+" as letters, rest) =>
+    ("^[^[:digit:]]+" as letters, rest) =>
       if letters.to_string() == "abc" && rest.to_string() == "123" {
         ()
       } else {

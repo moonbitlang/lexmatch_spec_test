@@ -13,7 +13,7 @@ test "BytesView - simple ASCII match" {
 test "BytesView - digit pattern" {
   let bytes = b"12345"
   lexmatch bytes with longest {
-    "\d+" => ()
+    "[[:digit:]]+" => ()
     _ => fail("Should match digits in bytes")
   }
 }
@@ -31,7 +31,7 @@ test "BytesView - character class" {
 test "BytesView - whitespace" {
   let bytes = b"   "
   lexmatch bytes with longest {
-    "\s+" => ()
+    "[[:space:]]+" => ()
     _ => fail("Should match whitespace in bytes")
   }
 }
@@ -104,7 +104,7 @@ test "BytesView - backslash literal" {
 test "BytesView - email pattern" {
   let bytes = b"test@example.com"
   lexmatch bytes with longest {
-    ("\w+" "@" "\w+" "\." "\w+") => ()
+    ("[[:word:]]+" "@" "[[:word:]]+" "\." "[[:word:]]+") => ()
     _ => fail("Should match email in bytes")
   }
 }
@@ -113,7 +113,15 @@ test "BytesView - email pattern" {
 test "BytesView - IP address" {
   let bytes = b"192.168.1.1"
   lexmatch bytes with longest {
-    ("\d{1,3}" "\." "\d{1,3}" "\." "\d{1,3}" "\." "\d{1,3}") => ()
+    (
+      "[[:digit:]]{1,3}"
+      "\."
+      "[[:digit:]]{1,3}"
+      "\."
+      "[[:digit:]]{1,3}"
+      "\."
+      "[[:digit:]]{1,3}"
+    ) => ()
     _ => fail("Should match IP in bytes")
   }
 }
@@ -131,7 +139,7 @@ test "BytesView - URL" {
 test "BytesView - JSON-like" {
   let bytes = b"\"key\":\"value\""
   lexmatch bytes with longest {
-    ("\"" "\w+" "\"" ":" "\"" "\w+" "\"") => ()
+    ("\"" "[[:word:]]+" "\"" ":" "\"" "[[:word:]]+" "\"") => ()
     _ => fail("Should match JSON pair in bytes")
   }
 }
@@ -235,7 +243,7 @@ test "BytesView - single byte" {
 test "BytesView - word boundary simulation" {
   let bytes = b"word1 word2"
   lexmatch bytes with longest {
-    ("\w+", rest) =>
+    ("[[:word:]]+", rest) =>
       if rest == " word2" {
         ()
       } else {
@@ -249,7 +257,17 @@ test "BytesView - word boundary simulation" {
 test "BytesView - sequence pattern" {
   let bytes = b"GET /path HTTP/1.1"
   lexmatch bytes with longest {
-    ("\w+" "\s" "/\w+" "\s" "\w+" "/" "\d+" "\." "\d+") => ()
+    (
+      "[[:word:]]+"
+      "[[:space:]]"
+      "/[[:word:]]+"
+      "[[:space:]]"
+      "[[:word:]]+"
+      "/"
+      "[[:digit:]]+"
+      "\."
+      "[[:digit:]]+"
+    ) => ()
     _ => fail("Should match HTTP request line in bytes")
   }
 }
@@ -259,17 +277,17 @@ test "BytesView - MAC address" {
   let bytes = b"AA:BB:CC:DD:EE:FF"
   lexmatch bytes with longest {
     (
-      "[\dA-Fa-f]{2}"
+      "[[:digit:]A-Fa-f]{2}"
       ":"
-      "[\dA-Fa-f]{2}"
+      "[[:digit:]A-Fa-f]{2}"
       ":"
-      "[\dA-Fa-f]{2}"
+      "[[:digit:]A-Fa-f]{2}"
       ":"
-      "[\dA-Fa-f]{2}"
+      "[[:digit:]A-Fa-f]{2}"
       ":"
-      "[\dA-Fa-f]{2}"
+      "[[:digit:]A-Fa-f]{2}"
       ":"
-      "[\dA-Fa-f]{2}"
+      "[[:digit:]A-Fa-f]{2}"
     ) => ()
     _ => fail("Should match MAC address in bytes")
   }
@@ -279,7 +297,7 @@ test "BytesView - MAC address" {
 test "BytesView - version string" {
   let bytes = b"v1.2.3"
   lexmatch bytes with longest {
-    ("v" "\d+" "\." "\d+" "\." "\d+") => ()
+    ("v" "[[:digit:]]+" "\." "[[:digit:]]+" "\." "[[:digit:]]+") => ()
     _ => fail("Should match version in bytes")
   }
 }
@@ -288,7 +306,7 @@ test "BytesView - version string" {
 test "BytesView - file path" {
   let bytes = b"/usr/local/bin"
   lexmatch bytes with longest {
-    ("/" "\w+" "/" "\w+" "/" "\w+") => ()
+    ("/" "[[:word:]]+" "/" "[[:word:]]+" "/" "[[:word:]]+") => ()
     _ => fail("Should match path in bytes")
   }
 }
@@ -297,7 +315,7 @@ test "BytesView - file path" {
 test "BytesView - git commit hash" {
   let bytes = b"commit abc1234"
   lexmatch bytes with longest {
-    ("commit" "\s" "[a-f0-9]{7}") => ()
+    ("commit" "[[:space:]]" "[a-f0-9]{7}") => ()
     _ => fail("Should match git commit in bytes")
   }
 }
@@ -306,7 +324,7 @@ test "BytesView - git commit hash" {
 test "BytesView - multiple captures" {
   let bytes = b"123abc"
   lexmatch bytes with longest {
-    (("\d+" as num) ("[a-z]+" as letters)) =>
+    (("[[:digit:]]+" as num) ("[a-z]+" as letters)) =>
       if num == "123" && letters == "abc" {
         ()
       } else {
@@ -320,7 +338,7 @@ test "BytesView - multiple captures" {
 test "BytesView - HTTP header" {
   let bytes = b"Content-Type: text/html"
   lexmatch bytes with longest {
-    ("[\w\-]+" ":" "\s*" "[\w/]+") => ()
+    ("[[:word:]\-]+" ":" "[[:space:]]*" "[[:word:]/]+") => ()
     _ => fail("Should match HTTP header in bytes")
   }
 }
@@ -329,7 +347,19 @@ test "BytesView - HTTP header" {
 test "BytesView - timestamp" {
   let bytes = b"2024-01-15 14:30:45"
   lexmatch bytes with longest {
-    ("\d{4}" "-" "\d{2}" "-" "\d{2}" "\s" "\d{2}" ":" "\d{2}" ":" "\d{2}") => ()
+    (
+      "[[:digit:]]{4}"
+      "-"
+      "[[:digit:]]{2}"
+      "-"
+      "[[:digit:]]{2}"
+      "[[:space:]]"
+      "[[:digit:]]{2}"
+      ":"
+      "[[:digit:]]{2}"
+      ":"
+      "[[:digit:]]{2}"
+    ) => ()
     _ => fail("Should match timestamp in bytes")
   }
 }
@@ -339,15 +369,15 @@ test "BytesView - UUID" {
   let bytes = b"550e8400-e29b-41d4-a716-446655440000"
   lexmatch bytes with longest {
     (
-      "[\da-f]{8}"
+      "[[:digit:]a-f]{8}"
       "-"
-      "[\da-f]{4}"
+      "[[:digit:]a-f]{4}"
       "-"
-      "[\da-f]{4}"
+      "[[:digit:]a-f]{4}"
       "-"
-      "[\da-f]{4}"
+      "[[:digit:]a-f]{4}"
       "-"
-      "[\da-f]{12}"
+      "[[:digit:]a-f]{12}"
     ) => ()
     _ => fail("Should match UUID in bytes")
   }
@@ -384,7 +414,7 @@ test "BytesView - parenthesized expression" {
 test "BytesView - comma-separated values" {
   let bytes = b"a,b,c"
   lexmatch bytes with longest {
-    ("\w" "," "\w" "," "\w") => ()
+    ("[[:word:]]" "," "[[:word:]]" "," "[[:word:]]") => ()
     _ => fail("Should match CSV in bytes")
   }
 }
@@ -393,7 +423,7 @@ test "BytesView - comma-separated values" {
 test "BytesView - log level" {
   let bytes = b"[INFO]"
   lexmatch bytes with longest {
-    ("\[" "\w+" "\]") => ()
+    ("\[" "[[:word:]]+" "\]") => ()
     _ => fail("Should match log level in bytes")
   }
 }
@@ -402,7 +432,7 @@ test "BytesView - log level" {
 test "BytesView - key-value pair" {
   let bytes = b"key=value"
   lexmatch bytes with longest {
-    ("\w+" "=" "\w+") => ()
+    ("[[:word:]]+" "=" "[[:word:]]+") => ()
     _ => fail("Should match key-value in bytes")
   }
 }
@@ -411,7 +441,7 @@ test "BytesView - key-value pair" {
 test "BytesView - dotted notation" {
   let bytes = b"obj.prop.method"
   lexmatch bytes with longest {
-    ("\w+" "\." "\w+" "\." "\w+") => ()
+    ("[[:word:]]+" "\." "[[:word:]]+" "\." "[[:word:]]+") => ()
     _ => fail("Should match dotted notation in bytes")
   }
 }
@@ -420,7 +450,7 @@ test "BytesView - dotted notation" {
 test "BytesView - phone number" {
   let bytes = b"(555)123-4567"
   lexmatch bytes with longest {
-    ("\(" "\d{3}" "\)" "\d{3}" "-" "\d{4}") => ()
+    ("\(" "[[:digit:]]{3}" "\)" "[[:digit:]]{3}" "-" "[[:digit:]]{4}") => ()
     _ => fail("Should match phone number in bytes")
   }
 }
@@ -429,7 +459,15 @@ test "BytesView - phone number" {
 test "BytesView - credit card pattern" {
   let bytes = b"4111-1111-1111-1111"
   lexmatch bytes with longest {
-    ("\d{4}" "-" "\d{4}" "-" "\d{4}" "-" "\d{4}") => ()
+    (
+      "[[:digit:]]{4}"
+      "-"
+      "[[:digit:]]{4}"
+      "-"
+      "[[:digit:]]{4}"
+      "-"
+      "[[:digit:]]{4}"
+    ) => ()
     _ => fail("Should match card number in bytes")
   }
 }
@@ -438,7 +476,7 @@ test "BytesView - credit card pattern" {
 test "BytesView - dollar amount" {
   let bytes = b"$99.99"
   lexmatch bytes with longest {
-    ("\$" "\d+" "\." "\d{2}") => ()
+    ("\$" "[[:digit:]]+" "\." "[[:digit:]]{2}") => ()
     _ => fail("Should match dollar amount in bytes")
   }
 }
@@ -447,7 +485,7 @@ test "BytesView - dollar amount" {
 test "BytesView - percentage" {
   let bytes = b"75%"
   lexmatch bytes with longest {
-    ("\d+" "%") => ()
+    ("[[:digit:]]+" "%") => ()
     _ => fail("Should match percentage in bytes")
   }
 }
@@ -456,7 +494,17 @@ test "BytesView - percentage" {
 test "BytesView - HTML tag" {
   let bytes = b"<div class=\"test\">"
   lexmatch bytes with longest {
-    ("<" "\w+" "\s" "\w+" "=" "\"" "\w+" "\"" ">") => ()
+    (
+      "<"
+      "[[:word:]]+"
+      "[[:space:]]"
+      "[[:word:]]+"
+      "="
+      "\""
+      "[[:word:]]+"
+      "\""
+      ">"
+    ) => ()
     _ => fail("Should match HTML tag in bytes")
   }
 }
@@ -474,7 +522,7 @@ test "BytesView - hexadecimal number" {
 test "BytesView - scientific notation" {
   let bytes = b"1.5e-10"
   lexmatch bytes with longest {
-    ("\d+" "\." "\d+" "[eE]" "[+\-]" "\d+") => ()
+    ("[[:digit:]]+" "\." "[[:digit:]]+" "[eE]" "[+\-]" "[[:digit:]]+") => ()
     _ => fail("Should match scientific notation in bytes")
   }
 }
@@ -483,7 +531,7 @@ test "BytesView - scientific notation" {
 test "BytesView - CSS selector" {
   let bytes = b"div.class#id"
   lexmatch bytes with longest {
-    ("\w+" "\." "\w+" "#" "\w+") => ()
+    ("[[:word:]]+" "\." "[[:word:]]+" "#" "[[:word:]]+") => ()
     _ => fail("Should match CSS selector in bytes")
   }
 }
@@ -492,7 +540,15 @@ test "BytesView - CSS selector" {
 test "BytesView - SQL statement" {
   let bytes = b"SELECT * FROM users"
   lexmatch bytes with longest {
-    ("SELECT" "\s" ".*" "\s" "FROM" "\s" "\w+") => ()
+    (
+      "SELECT"
+      "[[:space:]]"
+      ".*"
+      "[[:space:]]"
+      "FROM"
+      "[[:space:]]"
+      "[[:word:]]+"
+    ) => ()
     _ => fail("Should match SQL in bytes")
   }
 }

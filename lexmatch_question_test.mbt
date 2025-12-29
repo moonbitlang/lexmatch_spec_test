@@ -58,7 +58,7 @@ test "lexmatch? - with capture" {
 ///|
 test "lexmatch? - digit pattern" {
   let text = "12345"
-  if text lexmatch? "\d+" with longest {
+  if text lexmatch? "[[:digit:]]+" with longest {
     ()
   } else {
     fail("Should match digits")
@@ -68,13 +68,17 @@ test "lexmatch? - digit pattern" {
 ///|
 test "lexmatch? - email validation" {
   let email = "test@example.com"
-  if email lexmatch? ("\w+" "@" "\w+" "\." "\w+") with longest {
+  if email
+    lexmatch? ("[[:word:]]+" "@" "[[:word:]]+" "\." "[[:word:]]+") with longest {
     ()
   } else {
     fail("Should match email pattern")
   }
   let invalid = "notanemail"
-  if not(invalid lexmatch? ("\w+" "@" "\w+" "\." "\w+") with longest) {
+  if not(
+      invalid
+      lexmatch? ("[[:word:]]+" "@" "[[:word:]]+" "\." "[[:word:]]+") with longest,
+    ) {
     ()
   } else {
     fail("Should not match invalid email")
@@ -136,7 +140,8 @@ test "lexmatch? - optional pattern" {
 ///|
 test "lexmatch? - phone number validation" {
   let phone = "(123)456-7890"
-  if phone lexmatch? ("\(" "\d{3}" "\)" "\d{3}" "-" "\d{4}") with longest {
+  if phone
+    lexmatch? ("\(" "[[:digit:]]{3}" "\)" "[[:digit:]]{3}" "-" "[[:digit:]]{4}") with longest {
     ()
   } else {
     fail("Should match phone number")
@@ -147,7 +152,15 @@ test "lexmatch? - phone number validation" {
 test "lexmatch? - IP address validation" {
   let ip = "192.168.1.1"
   if ip
-    lexmatch? ("\d{1,3}" "\." "\d{1,3}" "\." "\d{1,3}" "\." "\d{1,3}") with longest {
+    lexmatch? (
+      "[[:digit:]]{1,3}"
+      "\."
+      "[[:digit:]]{1,3}"
+      "\."
+      "[[:digit:]]{1,3}"
+      "\."
+      "[[:digit:]]{1,3}"
+    ) with longest {
     ()
   } else {
     fail("Should match IP address")
@@ -173,7 +186,8 @@ test "lexmatch? - hex color validation" {
 ///|
 test "lexmatch? - date format validation" {
   let date = "2024-01-15"
-  if date lexmatch? ("\d{4}" "-" "\d{2}" "-" "\d{2}") with longest {
+  if date
+    lexmatch? ("[[:digit:]]{4}" "-" "[[:digit:]]{2}" "-" "[[:digit:]]{2}") with longest {
     ()
   } else {
     fail("Should match date format")
@@ -183,7 +197,8 @@ test "lexmatch? - date format validation" {
 ///|
 test "lexmatch? - time format validation" {
   let time = "14:30:45"
-  if time lexmatch? ("\d{2}" ":" "\d{2}" ":" "\d{2}") with longest {
+  if time
+    lexmatch? ("[[:digit:]]{2}" ":" "[[:digit:]]{2}" ":" "[[:digit:]]{2}") with longest {
     ()
   } else {
     fail("Should match time format")
@@ -193,7 +208,8 @@ test "lexmatch? - time format validation" {
 ///|
 test "lexmatch? - version string validation" {
   let version = "1.2.3"
-  if version lexmatch? ("\d+" "\." "\d+" "\." "\d+") with longest {
+  if version
+    lexmatch? ("[[:digit:]]+" "\." "[[:digit:]]+" "\." "[[:digit:]]+") with longest {
     ()
   } else {
     fail("Should match version format")
@@ -205,15 +221,15 @@ test "lexmatch? - UUID validation" {
   let uuid = "550e8400-e29b-41d4-a716-446655440000"
   if uuid
     lexmatch? (
-      "[\da-f]{8}"
+      "[[:digit:]a-f]{8}"
       "-"
-      "[\da-f]{4}"
+      "[[:digit:]a-f]{4}"
       "-"
-      "[\da-f]{4}"
+      "[[:digit:]a-f]{4}"
       "-"
-      "[\da-f]{4}"
+      "[[:digit:]a-f]{4}"
       "-"
-      "[\da-f]{12}"
+      "[[:digit:]a-f]{12}"
     ) with longest {
     ()
   } else {
@@ -226,17 +242,17 @@ test "lexmatch? - MAC address validation" {
   let mac = "AA:BB:CC:DD:EE:FF"
   if mac
     lexmatch? (
-      "[\dA-Fa-f]{2}"
+      "[[:digit:]A-Fa-f]{2}"
       ":"
-      "[\dA-Fa-f]{2}"
+      "[[:digit:]A-Fa-f]{2}"
       ":"
-      "[\dA-Fa-f]{2}"
+      "[[:digit:]A-Fa-f]{2}"
       ":"
-      "[\dA-Fa-f]{2}"
+      "[[:digit:]A-Fa-f]{2}"
       ":"
-      "[\dA-Fa-f]{2}"
+      "[[:digit:]A-Fa-f]{2}"
       ":"
-      "[\dA-Fa-f]{2}"
+      "[[:digit:]A-Fa-f]{2}"
     ) with longest {
     ()
   } else {
@@ -247,13 +263,13 @@ test "lexmatch? - MAC address validation" {
 ///|
 test "lexmatch? - identifier validation" {
   let id1 = "myVar"
-  if id1 lexmatch? "[a-zA-Z_]\w*" with longest {
+  if id1 lexmatch? "[a-zA-Z_][[:word:]]*" with longest {
     ()
   } else {
     fail("Should match identifier")
   }
   let id2 = "123invalid"
-  if not(id2 lexmatch? "[a-zA-Z_]\w*" with longest) {
+  if not(id2 lexmatch? "[a-zA-Z_][[:word:]]*" with longest) {
     ()
   } else {
     fail("Should not match identifier starting with digit")
@@ -279,13 +295,13 @@ test "lexmatch? - boolean literal check" {
 ///|
 test "lexmatch? - number format check" {
   let int_num = "123"
-  if int_num lexmatch? "\d+" with longest {
+  if int_num lexmatch? "[[:digit:]]+" with longest {
     ()
   } else {
     fail("Should match integer")
   }
   let float_num = "3.14"
-  if float_num lexmatch? ("\d+" "\." "\d+") with longest {
+  if float_num lexmatch? ("[[:digit:]]+" "\." "[[:digit:]]+") with longest {
     ()
   } else {
     fail("Should match float")
@@ -296,12 +312,12 @@ test "lexmatch? - number format check" {
 test "lexmatch? - signed number check" {
   let pos = "+123"
   let neg = "-456"
-  if pos lexmatch? ("[+\-]" "\d+") with longest {
+  if pos lexmatch? ("[+\-]" "[[:digit:]]+") with longest {
     ()
   } else {
     fail("Should match positive number")
   }
-  if neg lexmatch? ("[+\-]" "\d+") with longest {
+  if neg lexmatch? ("[+\-]" "[[:digit:]]+") with longest {
     ()
   } else {
     fail("Should match negative number")
@@ -331,7 +347,7 @@ test "lexmatch? - quoted string check" {
 ///|
 test "lexmatch? - file extension check" {
   let file = "document.pdf"
-  if file lexmatch? ("\w+" "\." "(?i:pdf)") with longest {
+  if file lexmatch? ("[[:word:]]+" "\." "(?i:pdf)") with longest {
     ()
   } else {
     fail("Should match PDF file")
@@ -341,7 +357,8 @@ test "lexmatch? - file extension check" {
 ///|
 test "lexmatch? - path validation" {
   let path = "/usr/local/bin"
-  if path lexmatch? ("/" "\w+" "/" "\w+" "/" "\w+") with longest {
+  if path
+    lexmatch? ("/" "[[:word:]]+" "/" "[[:word:]]+" "/" "[[:word:]]+") with longest {
     ()
   } else {
     fail("Should match path")
@@ -351,7 +368,16 @@ test "lexmatch? - path validation" {
 ///|
 test "lexmatch? - credit card pattern" {
   let card = "4111-1111-1111-1111"
-  if card lexmatch? ("\d{4}" "-" "\d{4}" "-" "\d{4}" "-" "\d{4}") with longest {
+  if card
+    lexmatch? (
+      "[[:digit:]]{4}"
+      "-"
+      "[[:digit:]]{4}"
+      "-"
+      "[[:digit:]]{4}"
+      "-"
+      "[[:digit:]]{4}"
+    ) with longest {
     ()
   } else {
     fail("Should match card number")
@@ -371,7 +397,8 @@ test "lexmatch? - BytesView matching" {
 ///|
 test "lexmatch? - BytesView with pattern" {
   let bytes = b"test@example.com"
-  if bytes lexmatch? ("\w+" "@" "\w+" "\." "\w+") with longest {
+  if bytes
+    lexmatch? ("[[:word:]]+" "@" "[[:word:]]+" "\." "[[:word:]]+") with longest {
     ()
   } else {
     fail("Should match email in BytesView")
@@ -393,7 +420,7 @@ test "lexmatch? - used in conditional" {
 ///|
 test "lexmatch? - negation check" {
   let text = "abc"
-  if not(text lexmatch? "\d+" with longest) {
+  if not(text lexmatch? "[[:digit:]]+" with longest) {
     ()
   } else {
     fail("Should not match digits")
@@ -403,13 +430,13 @@ test "lexmatch? - negation check" {
 ///|
 test "lexmatch? - whitespace check" {
   let spaces = "   "
-  if spaces lexmatch? "\s+" with longest {
+  if spaces lexmatch? "[[:space:]]+" with longest {
     ()
   } else {
     fail("Should match whitespace")
   }
   let nospace = "abc"
-  if not(nospace lexmatch? "\s+" with longest) {
+  if not(nospace lexmatch? "[[:space:]]+" with longest) {
     ()
   } else {
     fail("Should not match non-whitespace")
@@ -454,7 +481,7 @@ test "lexmatch? - prefix match with rest" {
 ///|
 test "lexmatch? - HTML tag detection" {
   let tag = "<div>"
-  if tag lexmatch? ("<" "\w+" ">") with longest {
+  if tag lexmatch? ("<" "[[:word:]]+" ">") with longest {
     ()
   } else {
     fail("Should match HTML tag")
@@ -464,7 +491,7 @@ test "lexmatch? - HTML tag detection" {
 ///|
 test "lexmatch? - JSON structure check" {
   let json_key = "\"name\":"
-  if json_key lexmatch? ("\"" "\w+" "\"" ":") with longest {
+  if json_key lexmatch? ("\"" "[[:word:]]+" "\"" ":") with longest {
     ()
   } else {
     fail("Should match JSON key")
@@ -484,7 +511,7 @@ test "lexmatch? - SQL keyword check" {
 ///|
 test "lexmatch? - environment variable check" {
   let env = "$HOME"
-  if env lexmatch? ("\$" "[A-Z_]\w*") with longest {
+  if env lexmatch? ("\$" "[A-Z_][[:word:]]*") with longest {
     ()
   } else {
     fail("Should match env variable")
@@ -494,7 +521,7 @@ test "lexmatch? - environment variable check" {
 ///|
 test "lexmatch? - CSV format check" {
   let csv = "a,b,c"
-  if csv lexmatch? ("\w" "," "\w" "," "\w") with longest {
+  if csv lexmatch? ("[[:word:]]" "," "[[:word:]]" "," "[[:word:]]") with longest {
     ()
   } else {
     fail("Should match CSV pattern")
@@ -504,7 +531,7 @@ test "lexmatch? - CSV format check" {
 ///|
 test "lexmatch? - currency amount check" {
   let price = "$99.99"
-  if price lexmatch? ("\$" "\d+" "\." "\d{2}") with longest {
+  if price lexmatch? ("\$" "[[:digit:]]+" "\." "[[:digit:]]{2}") with longest {
     ()
   } else {
     fail("Should match currency format")
@@ -514,7 +541,7 @@ test "lexmatch? - currency amount check" {
 ///|
 test "lexmatch? - percentage check" {
   let percent = "75%"
-  if percent lexmatch? ("\d+" "%") with longest {
+  if percent lexmatch? ("[[:digit:]]+" "%") with longest {
     ()
   } else {
     fail("Should match percentage")
@@ -524,7 +551,7 @@ test "lexmatch? - percentage check" {
 ///|
 test "lexmatch? - range check" {
   let range = "1-10"
-  if range lexmatch? ("\d+" "-" "\d+") with longest {
+  if range lexmatch? ("[[:digit:]]+" "-" "[[:digit:]]+") with longest {
     ()
   } else {
     fail("Should match range")
@@ -534,7 +561,7 @@ test "lexmatch? - range check" {
 ///|
 test "lexmatch? - network port check" {
   let address = "localhost:8080"
-  if address lexmatch? ("\w+" ":" "\d+") with longest {
+  if address lexmatch? ("[[:word:]]+" ":" "[[:digit:]]+") with longest {
     ()
   } else {
     fail("Should match host:port")
@@ -544,7 +571,7 @@ test "lexmatch? - network port check" {
 ///|
 test "lexmatch? - git hash check" {
   let commit = "commit abc1234"
-  if commit lexmatch? ("commit" "\s" "[a-f0-9]{7}") with longest {
+  if commit lexmatch? ("commit" "[[:space:]]" "[a-f0-9]{7}") with longest {
     ()
   } else {
     fail("Should match git commit")
@@ -554,7 +581,7 @@ test "lexmatch? - git hash check" {
 ///|
 test "lexmatch? - markdown heading check" {
   let heading = "### Title"
-  if heading lexmatch? ("#{1,6}" "\s" ".*") with longest {
+  if heading lexmatch? ("#{1,6}" "[[:space:]]" ".*") with longest {
     ()
   } else {
     fail("Should match markdown heading")
@@ -565,7 +592,17 @@ test "lexmatch? - markdown heading check" {
 test "lexmatch? - method chaining" {
   let code = "obj.method1().method2()"
   if code
-    lexmatch? ("\w+" "\." "\w+" "\(" "\)" "\." "\w+" "\(" "\)") with longest {
+    lexmatch? (
+      "[[:word:]]+"
+      "\."
+      "[[:word:]]+"
+      "\("
+      "\)"
+      "\."
+      "[[:word:]]+"
+      "\("
+      "\)"
+    ) with longest {
     ()
   } else {
     fail("Should match method chaining")
@@ -575,7 +612,7 @@ test "lexmatch? - method chaining" {
 ///|
 test "lexmatch? - array index check" {
   let access = "arr[5]"
-  if access lexmatch? ("\w+" "\[" "\d+" "\]") with longest {
+  if access lexmatch? ("[[:word:]]+" "\[" "[[:digit:]]+" "\]") with longest {
     ()
   } else {
     fail("Should match array access")
@@ -586,7 +623,17 @@ test "lexmatch? - array index check" {
 test "lexmatch? - ternary operator check" {
   let ternary = "a ? b : c"
   if ternary
-    lexmatch? ("\w" "\s*" "\?" "\s*" "\w" "\s*" ":" "\s*" "\w") with longest {
+    lexmatch? (
+      "[[:word:]]"
+      "[[:space:]]*"
+      "\?"
+      "[[:space:]]*"
+      "[[:word:]]"
+      "[[:space:]]*"
+      ":"
+      "[[:space:]]*"
+      "[[:word:]]"
+    ) with longest {
     ()
   } else {
     fail("Should match ternary operator")
@@ -596,7 +643,8 @@ test "lexmatch? - ternary operator check" {
 ///|
 test "lexmatch? - lambda arrow check" {
   let lambda = "() => x"
-  if lambda lexmatch? ("\(" "\)" "\s*" "=>" "\s*" "\w") with longest {
+  if lambda
+    lexmatch? ("\(" "\)" "[[:space:]]*" "=>" "[[:space:]]*" "[[:word:]]") with longest {
     ()
   } else {
     fail("Should match lambda arrow")
@@ -606,7 +654,8 @@ test "lexmatch? - lambda arrow check" {
 ///|
 test "lexmatch? - type annotation check" {
   let annotation = "x: Int"
-  if annotation lexmatch? ("\w" ":" "\s*" "\w+") with longest {
+  if annotation
+    lexmatch? ("[[:word:]]" ":" "[[:space:]]*" "[[:word:]]+") with longest {
     ()
   } else {
     fail("Should match type annotation")
@@ -616,7 +665,7 @@ test "lexmatch? - type annotation check" {
 ///|
 test "lexmatch? - generic type check" {
   let generic = "List<Int>"
-  if generic lexmatch? ("\w+" "<" "\w+" ">") with longest {
+  if generic lexmatch? ("[[:word:]]+" "<" "[[:word:]]+" ">") with longest {
     ()
   } else {
     fail("Should match generic type")
@@ -626,7 +675,8 @@ test "lexmatch? - generic type check" {
 ///|
 test "lexmatch? - combining multiple checks" {
   fn is_valid_email(s : String) -> Bool {
-    s lexmatch? ("\w+" "@" "\w+" "\." "\w+") with longest
+    s
+    lexmatch? ("[[:word:]]+" "@" "[[:word:]]+" "\." "[[:word:]]+") with longest
   }
 
   if is_valid_email("test@example.com") {
