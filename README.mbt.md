@@ -344,12 +344,23 @@ test {
     - `[^a-z]`: Matches any character not in the range `a` to `z`
     - `[[:digit:][:space:]]`: Matches any digit or whitespace character (use POSIX classes inside the brackets)
 - **Quantifiers**:
-  - `*`: Matches the preceding sub-expression zero or more times
-  - `+`: Matches the preceding sub-expression one or more times
-  - `?`: Matches the preceding sub-expression zero or one time
+  - `*`: Matches the preceding sub-expression zero or more times (greedy)
+  - `+`: Matches the preceding sub-expression one or more times (greedy)
+  - `?`: Matches the preceding sub-expression zero or one time (greedy)
   - `{n}`: Matches the preceding sub-expression exactly n times
-  - `{n,}`: Matches the preceding sub-expression at least n times
-  - `{n,m}`: Matches the preceding sub-expression at least n times, but no more than m times
+  - `{n,}`: Matches the preceding sub-expression at least n times (greedy)
+  - `{n,m}`: Matches the preceding sub-expression at least n times, but no more than m times (greedy)
+- **Non-greedy quantifiers** (only available with first match strategy, i.e., without `with longest`):
+  - `*?`: Matches the preceding sub-expression zero or more times (non-greedy)
+  - `+?`: Matches the preceding sub-expression one or more times (non-greedy)
+  - `??`: Matches the preceding sub-expression zero or one time (non-greedy)
+  - `{n}?`: Matches the preceding sub-expression exactly n times (non-greedy)
+  - `{n,}?`: Matches the preceding sub-expression at least n times (non-greedy)
+  - `{n,m}?`: Matches the preceding sub-expression at least n times, but no more than m times (non-greedy)
+
+  **Semantics**: Greedy quantifiers match as much as possible while still allowing the overall pattern to succeed, whereas non-greedy (lazy) quantifiers match as little as possible while still allowing the overall pattern to succeed. For example:
+  - With greedy `.*`, the pattern `"<.*>"` matches from the first `<` to the last `>` in `"<a><b>"`, capturing `"<a><b>"`.
+  - With non-greedy `.*?`, the pattern `"<.*?>"` matches from the first `<` to the first `>` in `"<a><b>"`, capturing `"<a>"`.
 - **Anchors**:
   - `$`: Matches the end position of the input string
 - **Scoped Modifiers**:
