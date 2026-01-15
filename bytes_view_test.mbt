@@ -585,3 +585,58 @@ test "BytesView - control characters" {
     _ => fail("Should match control chars in bytes")
   }
 }
+
+///|
+test "BytesView - literal match" {
+  let bytes = b"ok"
+  lexmatch bytes {
+    "ok" => ()
+    _ => fail("Should match literal bytes")
+  }
+}
+
+///|
+test "BytesView - sequence match" {
+  let bytes = b"5a"
+  lexmatch bytes {
+    ("[[:digit:]]" "[a-z]") => ()
+    _ => fail("Should match digit-letter sequence in bytes")
+  }
+}
+
+///|
+test "BytesView - rest variable match" {
+  let bytes = b"123abc"
+  lexmatch bytes {
+    ("[[:digit:]]+", rest) =>
+      if rest == "abc" {
+        ()
+      } else {
+        fail("Rest should be 'abc'")
+      }
+    _ => fail("Should match digits then rest")
+  }
+}
+
+///|
+test "BytesView - capture match" {
+  let bytes = b"user42"
+  lexmatch bytes {
+    (("[a-z]+" as name) "[[:digit:]]+") =>
+      if name == "user" {
+        ()
+      } else {
+        fail("Should capture 'user'")
+      }
+    _ => fail("Should match capture and digits")
+  }
+}
+
+///|
+test "BytesView - hex byte match" {
+  let bytes = b"\x7f"
+  lexmatch bytes {
+    "\x7f" => ()
+    _ => fail("Should match 0x7f in bytes")
+  }
+}
