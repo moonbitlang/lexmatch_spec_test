@@ -138,7 +138,7 @@ test {
 
 - **Catch-all case**: A branch whose left side is a variable or wildcard `_`, which can match any target. It must be placed at the end of the `lexmatch` branches to handle unmatched cases.
 
-- **Lex Pattern**: The pattern part on the left side of the `lexmatch` branch (before `=>`), which differs from the guard part (currently `lexmatch` does not support guards).
+- **Lex Pattern**: The pattern part on the left side of the `lexmatch` branch (before `=>`).
 
   A lex pattern can be one of the following forms:
 
@@ -159,6 +159,15 @@ test {
   - `"[[:digit:]]+"` — matches if entire target consists of digits
   - `("[[:digit:]]+", rest)` — matches digits at the start; `rest` gets the remainder
   - `(_, "ERROR" ("[[:digit:]]+" as code), rest)` — finds "ERROR" followed by digits anywhere in the target; captures the digits as `code`
+
+- **Guard**: An optional condition attached to a lex pattern using the syntax `pattern if condition => action`. When the pattern matches, the guard condition is evaluated; the branch is taken only if the condition is `true`. If the guard fails, matching continues with subsequent branches. Guards are only available with the default (first match) strategy—they cannot be used with `with longest` or `lexmatch?`.
+
+- **Regex Pattern**: Regex patterns have three forms:
+  - **Regex literal**: A string literal representing a regex pattern. Example: `"[^ \t\r\n]+"`. Note that regex literals must be enclosed in double quotes and do not require double escaping. For example, to match a backslash character, use `"\\"` instead of `"\\\\"`.
+  - **Capture**: A regex pattern followed by `as` and a variable name to capture the matched substring. Example: `"[^ \t\r\n]+" as word`. If the lex pattern is a bare regex pattern of this form, parentheses are required.
+  - **Sequence**: A sequence of regex patterns separated by spaces. Example: `"//" ("[^\r\n]*" as comment)`. If the lex pattern is a bare regex pattern of this form, parentheses are required.
+
+  Regex patterns can be nested to form more complex patterns.
 
 #### Lex Pattern Forms - Examples
 
@@ -290,12 +299,52 @@ test {
 }
 ```
 
-- **Regex Pattern**: Regex patterns have three forms:
-  - **Regex literal**: A string literal representing a regex pattern. Example: `"[^ \t\r\n]+"`. Note that regex literals must be enclosed in double quotes and do not require double escaping. For example, to match a backslash character, use `"\\"` instead of `"\\\\"`.
-  - **Capture**: A regex pattern followed by `as` and a variable name to capture the matched substring. Example: `"[^ \t\r\n]+" as word`. If the lex pattern is a bare regex pattern of this form, parentheses are required.
-  - **Sequence**: A sequence of regex patterns separated by spaces. Example: `"//" ("[^\r\n]*" as comment)`. If the lex pattern is a bare regex pattern of this form, parentheses are required.
+#### Guard Examples
 
-  Regex patterns can be nested to form more complex patterns.
+The following examples demonstrate how to use guards with `lexmatch`.
+
+**Conditional matching based on captured value:**
+
+```mbt check
+///|
+test {
+  // Match identifiers and classify by length
+  fn match_long_identifier(s : StringView) -> String {
+    lexmatch s {
+      ("[[:alpha:]][[:word:]]*" as id, _) if id.length() > 3 =>
+        "long: \{id}"
+      ("[[:alpha:]][[:word:]]*" as id, _) =>
+        "short: \{id}"
+      _ => "not an identifier"
+    }
+  }
+  inspect(match_long_identifier("hello123"), content="long: hello123")
+  inspect(match_long_identifier("ab"), content="short: ab")
+  inspect(match_long_identifier("123"), content="not an identifier")
+}
+```
+
+**Filtering with external data:**
+
+```mbt check
+///|
+test {
+  // Distinguish keywords from identifiers
+  let keywords : Array[String] = ["if", "else", "while", "for"]
+  fn classify_word(s : StringView) -> String {
+    lexmatch s {
+      ("[[:alpha:]]+" as word, _) if keywords.contains(word.to_string()) =>
+        "keyword"
+      ("[[:alpha:]]+", _) => "identifier"
+      _ => "other"
+    }
+  }
+  inspect(classify_word("if"), content="keyword")
+  inspect(classify_word("while"), content="keyword")
+  inspect(classify_word("myVar"), content="identifier")
+  inspect(classify_word("123"), content="other")
+}
+```
 
 #### Regex Literal Syntax Quick Reference
 
